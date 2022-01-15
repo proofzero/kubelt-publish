@@ -1,0 +1,39 @@
+{
+  "name": "Revealed Content",
+  "description": "This is data that is published on IPFS. This is the revealed content.",
+  "bayc": {
+    "id": 5383,
+    "name": "Bored Ape YC #5383",
+    "trait_count": 6,
+    "traits": [
+      {
+        "trait": "background",
+        "value": "PSA 10"
+      },
+      {
+        "trait": "fur",
+        "value": "Solid Gold"
+      },
+      {
+        "trait": "hat",
+        "value": "Army Hat"
+      },
+      {
+        "trait": "clothes",
+        "value": "Lumberjack Shirt"
+      },
+      {
+        "trait": "eyes",
+        "value": "Angry"
+      },
+      {
+        "trait": "mouth",
+        "value": "Bored Unshaven"
+      },
+      {
+        "trait": "earring",
+        "value": "none"
+      }
+    ]
+  }
+}
