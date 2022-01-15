@@ -1,0 +1,22 @@
+---
+name: 'web3-publish'
+description: 'The easiest way to manage web3 content.'
+branding:
+  icon: 'upload-cloud'
+  color: 'green'
+inputs:
+  secret:
+    description: 'Secret key for name publishing.'
+    required: true
+  glob:
+    description: 'Matches to the glob pattern will be individually published.'
+    required: true
+  published:
+    description: 'Whether the content is published. Default false.' 
+    required: false
+outputs:
+  roots:
+    description: 'Content addresses created.'
+runs:
+  using: 'node16'
+  main: 'index.js'
