@@ -12,7 +12,7 @@ for more information.
 In your repo create a directory `workflow` directory in the `.github` directory:
 
 ```bash
-$ mkdir -p .guthub/workflow
+$ mkdir -p .github/workflow
 ```
 
 In the `workflow` directory create a yaml file (for example `build.yaml`) with
