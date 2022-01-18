@@ -45,7 +45,7 @@ jobs:
           glob: "./data"
           published: true
 
-      - run: echo '${{ steps.data.outputs.roots }}' >> output.json
+      - run: echo '${{ steps.data.outputs.roots }}' >> output.js
 
       - name: Save output
         uses: actions/upload-artifact@v2
