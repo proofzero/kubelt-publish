@@ -93,7 +93,7 @@ These examples use included test fixture data to illustrate the capabilities of
 the publishing API by accessing it directly.
 
 ```bash
-curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" \
+$ curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" \
  -H "X-Public-Key: my_secret_key"  \
  -H "X-Signature: my_secret_key"   \
  -F file=@test/fixtures/unrevealed.car \
@@ -118,7 +118,7 @@ which we pretty print (with `jq`):
 Now we `curl` the name to see what we get back:
 
 ```bash
-curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123"
+$ curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123"
 ```
 
 Which returns:
@@ -130,7 +130,7 @@ unpublished
 Now let's flip the `published` flag:
 
 ```bash
-curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" \
+$ curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" \
  -H "X-Public-Key: my_secret_key"  \
  -H "X-Signature: my_secret_key"   \
  -F file=@test/fixtures/unrevealed.car \
@@ -154,7 +154,7 @@ Which we pretty print (with `jq`):
 Now when we `curl` the name:
 
 ```bash
-curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123"
+$ curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123"
 ```
 
 We see:
@@ -166,7 +166,7 @@ bafyreid7jv35hibnc3fq2nzacom57gihwfh5e4yp5onoyf2vosybfjf4ua
 And we can chain calls to get the data directly out of IPFS:
 
 ```bash
-curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" | ipfs dag get | jq
+$ curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" | ipfs dag get | jq
 ```
 
 Which pretty prints:
@@ -181,7 +181,7 @@ Which pretty prints:
 Now we can publish new content addressed by the same name (`abc123` in this case):
 
 ```bash
-curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" \
+$ curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" \
  -H "X-Public-Key: my_secret_key"  \
  -H "X-Signature: my_secret_key"   \
  -F file=@test/fixtures/revealed.car \
@@ -191,7 +191,7 @@ curl -X POST "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123
 Note that the cid in the response has changed. With the same call as above:
 
 ```bash
-curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" | ipfs dag get | jq
+$ curl "https://pndo-worker.alfl-dev.workers.dev/v0/api/content/kbt/abc123" | ipfs dag get | jq
 ```
 
 Which pretty prints:
