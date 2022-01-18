@@ -9,7 +9,7 @@ Follow these steps to create a workflow that pushes your content to IPFS. See
 the [GitHub Actions Quickstart](https://docs.github.com/en/actions/quickstart)
 for more information.
 
-In your repo create a directory `workflow` directory in the `.github` directory:
+In your repo create a `workflow` directory under the `.github` directory:
 
 ```bash
 $ mkdir -p .github/workflow
