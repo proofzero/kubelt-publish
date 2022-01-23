@@ -11,8 +11,12 @@ inputs:
   glob:
     description: 'Matches to the glob pattern will be individually published.'
     required: true
+  as:
+    description: "Which IPFS API to use: 'dag' or 'file', default: 'dag'. \"
+      Are you publishing files ('file') or data structures ('dag')?"
+    required: false
   published:
-    description: 'Whether the content is published. Default false.' 
+    description: 'Whether the content is published. Default false.'
     required: false
 outputs:
   roots:

@@ -3,8 +3,8 @@ const util = require('util')
 
 const core = require('@actions/core')
 const fetch = require('node-fetch')
-const FormData = require('form-data')
 const sha256 = require('@stablelib/sha256')
+const FormData = require('form-data')
 
 const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
@@ -13,32 +13,44 @@ async function start() {
     try {
         const secret = core.getInput('secret', { required: true })
         const globspec = core.getInput('glob', { required: true })
+        // Restrict the "as" parameter to either "dag" or "file".
+        const as = (core.getInput('as', { required: false }).match("^dag$|^file$") || ['dag'])[0]
         const published = core.getBooleanInput('published', { required: false }) || false
 
         const roots = await glob(globspec).then(async files => {
             const roots = []
             for (let i = 0; i < files.length; i++) {
-                const form = new FormData()
-
+                
                 const metadata = JSON.stringify({
                     "published": published,
+                    "as": as,
                 })
-                form.append('metadata', metadata)
 
-                // TODO: Check failure to pack.
-                const { stdin, stdout } = await exec(`node ${__dirname}/vendor/cli.js courtyard convert ${files[i]}`)
-                form.append('file', fs.createReadStream('./output.car'))
+                const form = new FormData()
+
+                if ("dag" == as) {
+                    // TODO: Make this call via SDK instead of CLI.
+                    // TODO: Check failure to pack.
+                    const { stdin, stdout } = await exec(`node ${__dirname}/vendor/cli.js courtyard convert ${files[i]}`)
+                    //options.body = fs.createReadStream('./output.car')
+                    form.append('data', fs.createReadStream('./output.car'))
+                } else { // "file" == as
+                    //options.body = fs.createReadStream(files[i])
+                    form.append('data', fs.createReadStream(files[i]))
+                }
 
                 const options = {
                     method: 'POST',
-                    headers: {
+                    headers: { // TODO 'Content-Type'?
                         ...form.headers,
+                        'X-Metadata': metadata, // TODO: Check failure to encode.
                         'X-Public-Key': secret,
                         'X-Signature': secret, // Generate from key (sig of pubkey).
                     },
-                    body: form,
                 }
 
+                options.body = form
+ 
                 // TODO: Calculate the name so we can build it into the URL.
                 const name = Buffer.from(sha256.hash(secret + files[i])).toString('hex')
 
