@@ -86,6 +86,10 @@ files that match the pattern are named and published, currently.
 - `published` is a boolean that controls whether the content is published to
 IPFS. If `false` names and metadata are created. If `true` names and metadata
 are created and the content is pinned on IPFS.
+- 'as' is an enum field, one of `"dag"` or `"file"` that lets you specify which
+IPFS API to upload with. Default is `"dag"` which stores file contents as DAGs,
+use `"file"` if you want to store files themselves (as opposed to their contents).
+The `"dag"` option lets you store data structures, e.g. JSON, directly into our graph.
 
 ## `curl` Workflow
 
