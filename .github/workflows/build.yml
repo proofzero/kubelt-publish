@@ -15,14 +15,22 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v2
 
-      - name: Publish data/ folder to web3
-        id: data
+      - name: Push and publish ./metadata/*/unrevealed.json files to web3
+        id: push-unrevealed
         uses: kubelt/web3-publish@v0-pre-alpha
         with:
           secret: ${{ secrets.NAME_PUBLISHING_KEY }}
-          glob: "./metadata/*/*"
+          glob: "./metadata/*/unrevealed.json"
           published: true
 
+      - name: Push and not publish ./metadata/*/revealed.json files to web3
+        id: push-revealed
+        uses: kubelt/web3-publish@v0-pre-alpha
+        with:
+          secret: ${{ secrets.NAME_PUBLISHING_KEY }}
+          glob: "./metadata/*/revealed.json"
+          published: false
+          
       - run: echo '${{ steps.data.outputs.roots }}' >> output.js
 
       - name: Save output
