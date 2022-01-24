@@ -1,0 +1,23 @@
+{
+  "name": "I am very much REVEALED!",
+  "description": "Yeah look at me, I'm published on IPFS baby!",
+  "image_url": "https://www.iamsuchagreatimage.lol/123456789765434567.jpg",
+  "hash": "viuqfi4y39gv3p4cfuvopc1g419vuc419m941",
+  "traits": [
+    {
+      "trait": "trait_1",
+    },
+    {
+      "trait": "trait_2",
+      "value": "lolilol"
+    },
+    {
+      "trait": "trait_3",
+      "value": "hahahaha"
+    },
+    {
+      "trait": "trait_4",
+      "value": "welcome to the metaverse"
+    }
+  ]
+}
