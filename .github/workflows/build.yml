@@ -24,6 +24,12 @@ jobs:
           published: true
           
       - run: echo '${{ steps.push-unrevealed.outputs.roots }}' >> output-unrevealed.js
+      
+      - name: Save output-unrevealed
+        uses: actions/upload-artifact@v2
+        with:
+          name: output-unrevealed
+          path: ./output-unrevealed.js
 
       - name: Push and not publish ./metadata/*/revealed.json files to web3
         id: push-revealed
@@ -33,10 +39,10 @@ jobs:
           glob: "./metadata/*/revealed.json"
           published: false
           
-      - run: echo '${{ steps.push-revealed.outputs.roots }}' >> outpu-revealedt.js
+      - run: echo '${{ steps.push-revealed.outputs.roots }}' >> output-revealed.js
 
-      - name: Save output
+      - name: Save output-revealed
         uses: actions/upload-artifact@v2
         with:
-          name: output
-          path: ./output.js
+          name: output-revealed
+          path: ./output-revealed.js
