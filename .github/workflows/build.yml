@@ -1,0 +1,32 @@
+name: web3 Publish
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Publish data/ folder to web3
+        id: data
+        uses: kubelt/web3-publish@v0-pre-alpha
+        with:
+          secret: ${{ secrets.NAME_PUBLISHING_KEY }}
+          glob: "./metadata/*"
+          published: true
+
+      - run: echo '${{ steps.data.outputs.roots }}' >> output.js
+
+      - name: Save output
+        uses: actions/upload-artifact@v2
+        with:
+          name: output
+          path: ./output.js
