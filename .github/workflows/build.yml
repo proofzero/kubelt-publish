@@ -20,7 +20,7 @@ jobs:
         uses: kubelt/web3-publish@v0-pre-alpha
         with:
           secret: ${{ secrets.NAME_PUBLISHING_KEY }}
-          glob: "./metadata/*"
+          glob: "./metadata/*/*"
           published: true
 
       - run: echo '${{ steps.data.outputs.roots }}' >> output.js
