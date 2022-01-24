@@ -22,6 +22,8 @@ jobs:
           secret: ${{ secrets.NAME_PUBLISHING_KEY }}
           glob: "./metadata/*/unrevealed.json"
           published: true
+          
+      - run: echo '${{ steps.push-unrevealed.outputs.roots }}' >> output-unrevealed.js
 
       - name: Push and not publish ./metadata/*/revealed.json files to web3
         id: push-revealed
@@ -31,7 +33,7 @@ jobs:
           glob: "./metadata/*/revealed.json"
           published: false
           
-      - run: echo '${{ steps.data.outputs.roots }}' >> output.js
+      - run: echo '${{ steps.push-revealed.outputs.roots }}' >> outpu-revealedt.js
 
       - name: Save output
         uses: actions/upload-artifact@v2
