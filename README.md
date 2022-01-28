@@ -86,11 +86,15 @@ tighten. To store `secret` securely (as it is above) use [Encrypted secrets](htt
 - `glob` is a [minimatch](https://github.com/isaacs/minimatch) pattern. All
 files and directories that match the pattern are named and published.
 
-- `as` is an enum field, one of `"dag"`, `"dir"`, or `"file"`, that lets you
-specify which IPFS API to upload with. Default is `"dag"` which stores file
+- `as` is an enum field, one of `"dag"`, `"file"`, `"dir"`, or `"wrap"`, that lets you
+specify what kind of content you're uploading. Default is `"dag"` which stores file
 contents as DAGs, use `"file"` if you want to store files themselves (as opposed
-to their contents). Use `"dir"` to upload directories. The `"dag"` option lets
-you store data structures, e.g. JSON objects, directly into our graph.
+to their contents). Use `"dir"` to upload directory contents and `"wrap"` to
+upload the directory containing ("wrapping") those contents (e.g. do you want to
+upload `data`, the wrapping directory, or `data/*`, its contents).
+
+The `"dag"` option lets you store data structures, e.g. JSON objects, directly
+into our graph.
 
 - `published` is a boolean that controls whether the content is published to
 IPFS. If `false` names and metadata are created. If `true` names and metadata

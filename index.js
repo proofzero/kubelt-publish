@@ -35,8 +35,8 @@ async function start() {
         const globspec = core.getInput('glob', { required: true })
         const published = core.getBooleanInput('published', { required: false }) || false
 
-        // Restrict the "as" parameter to either "dag", "file", or "dir", defaulting to "dag".
-        const as = (core.getInput('as', { required: false }).match("^dag$|^file$|^dir$") || ['dag'])[0]
+        // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap", defaulting to "dag".
+        const as = (core.getInput('as', { required: false }).match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
 
         const roots = await glob(globspec).then(async files => {
             const roots = []
@@ -67,14 +67,14 @@ async function start() {
                     }
                     //options.body = fs.createReadStream(files[i])
                     form.append('data', fs.createReadStream(files[i]))
-                } else if ("dir" == as) {
+                } else if ("dir" == as || "wrap" == as) {
                     if (!inodeStat.isDirectory()) {
                         throw ('"dir" parameter requires a directory, got: ', JSON.stringify(inodeStat))
                     }
                     // TODO: Use a secure upload key and do this client-side?
                     // TODO: Pack the directory by adding all the files to the body.
                     // TODO: What if there are duplicate names? Is there a path differentiator?
-                    const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${files[i]} --output output.car`)
+                    const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${files[i]} --output output.car --wrapWithDirectory ${"wrap" == as}`)
                     form.append('data', fs.createReadStream('./output.car'))
                 } else {
                     throw ('Invalid "as" parameter: ', as)
