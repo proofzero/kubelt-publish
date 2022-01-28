@@ -35,6 +35,7 @@
     "event-stream": "4.0.1",
     "form-data": "^4.0.0",
     "glob": "^7.2.0",
+    "ipfs-car": "^0.6.1",
     "ipfs-http-client": "55.0.0",
     "ipfs-message-port-client": "0.10.3",
     "ipns": "0.16.0",
