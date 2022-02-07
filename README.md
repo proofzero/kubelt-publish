@@ -109,7 +109,7 @@ First let's submit a carfile with `published: false` (so it won't be pinned):
 
 ```bash
 $ curl -X POST "https://api.pndo.xyz/v0/api/content/kbt/abc123" \
- -F file=@test/fixtures/unrevealed.car \
+ -F data=@test/fixtures/unrevealed.car \
  -H 'X-Signature: my_secret_key'       \
  -H 'X-Metadata: {"published": false}'
 ```
@@ -145,9 +145,9 @@ This is because we set the `published` flag to `false`. Now let's flip the flag:
 
 ```bash
 $ curl -X POST "https://api.pndo.xyz/v0/api/content/kbt/abc123" \
- -H "X-Signature: my_secret_key"   \
- -F file=@test/fixtures/unrevealed.car \
- -F metadata='{"published": true}'
+ -F data=@test/fixtures/unrevealed.car \
+ -H 'X-Signature: my_secret_key'       \
+ -H 'X-Metadata: {"published": true}'
 ```
 
 Which we pretty print (with `jq`):
@@ -195,9 +195,9 @@ Now we can publish new content addressed by the same name (`abc123` in this case
 
 ```bash
 $ curl -X POST "https://api.pndo.xyz/v0/api/content/kbt/abc123" \
- -H "X-Signature: my_secret_key"   \
- -F file=@test/fixtures/revealed.car \
- -F metadata='{"published": true}'
+ -F data=@test/fixtures/revealed.car \
+ -H 'X-Signature: my_secret_key'       \
+ -H 'X-Metadata: {"published": true}'
 ```
 
 Note that the cid in the response has changed. With the same call as above:
