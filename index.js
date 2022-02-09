@@ -8,7 +8,6 @@ const FormData = require('form-data')
 const { base36 } = require('multiformats/bases/base36')
 const PeerId = require('peer-id')
 const { CID } = require('multiformats/cid')
-const base64 = require('base-64')
 
 const util = require('util')
 const glob = util.promisify(require('glob'))
@@ -121,7 +120,7 @@ async function start() {
                 options.body = form
 
                 const humanName = getHumanName(namespec, files[i])
-                const publishingKey = await getPublishingKey(Buffer.from(base64.decode(secret)), humanName)
+                const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
                 const contentName = await getContentNamme(publishingKey, humanName)
 
                 // TODO: Send key to server?
