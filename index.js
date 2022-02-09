@@ -62,6 +62,12 @@ async function start() {
         const namespec = core.getInput('name', { required: false }) || 'path'
         const published = core.getBooleanInput('published', { required: false }) || false
 
+        console.log({
+            globspec: globspec,
+            namespec: namespec,
+            published: published,
+        })
+
         // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap", defaulting to "dag".
         const as = (core.getInput('as', { required: false }).match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
 
@@ -123,7 +129,7 @@ async function start() {
                 console.log(humanName)
 
                 const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
-                console.log(publishingKey)
+                //console.log(publishingKey)
 
                 const contentName = await getContentName(publishingKey, humanName)
                 console.log(contentName)
