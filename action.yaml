@@ -11,11 +11,17 @@ inputs:
   glob:
     description: 'Matches to the glob pattern will be individually published.'
     required: true
+  name:
+    description: "What is the human-readable name for your content? Currently \"
+      'path' will use the file (or directory, depending on 'as' value)."
+    required: false
   as:
-    description: "What data type are you uploading? 'dag', 'dir', 'wrap', or 'file', default: 'dag'. \"
-      Are you publishing files ('file'), a data structure ('dag'), or a directory ('dir')? \"
-      If you're publishing a directory 'wrap' will publish the directory itself, whereas 'dir' \"
-      will publish its contents (e.g. 'data', the directory, versus 'data/*', its contents)."
+    description: "What data type are you uploading? 'dag', 'dir', 'wrap', or \"
+      'file', default: 'dag'. Are you publishing files ('file'), a data \"
+      structure ('dag'), or a directory ('dir')? If you're publishing a \"
+      directory 'wrap' will publish the directory itself, whereas 'dir' will \"
+      publish its contents (e.g. 'data', the directory, versus 'data/*', its \"
+      contents)."
     required: false
   published:
     description: 'Whether the content is published. Default false.'
