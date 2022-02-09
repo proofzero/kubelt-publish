@@ -22,7 +22,7 @@ async function getContentName(publishingKey, name) {
 
 async function getPublishingKey(secret, name) {
     // Get the key object out of the protobuf.
-    const secretKey = crypto.keys.UnmarshalPrivateKey(secret)
+    const secretKey = crypto.keys.unmarshalPrivateKey(secret)
 
     // Sign the human name to seed the generation of a publishing key for it.
     const signature = await secretKey.sign(Buffer.from(name))
