@@ -120,8 +120,13 @@ async function start() {
                 options.body = form
 
                 const humanName = getHumanName(namespec, files[i])
+                console.log(humanName)
+
                 const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
+                console.log(publishingKey)
+
                 const contentName = await getContentName(publishingKey, humanName)
+                console.log(contentName)
 
                 // TODO: Send key to server?
                 // Pack the key in a protobuf for transmission.
