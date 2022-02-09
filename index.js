@@ -13,7 +13,7 @@ const util = require('util')
 const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
 
-async function getContentName(publishingKey, name) {
+async function getContentName(publishingKey) {
     const peer = await PeerId.createFromPrivKey(publishingKey.bytes)
     const peerId = peer.toString()
     const cid = CID.parse(peerId)
@@ -25,6 +25,7 @@ async function getPublishingKey(secret, name) {
     const secretKey = await crypto.keys.unmarshalPrivateKey(secret)
 
     // Sign the human name to seed the generation of a publishing key for it.
+    // Use a 32 bit hash (blake2). Plus disambiguating context.
     const signature = await secretKey.sign(Buffer.from(name))
 
     // ed25519 seeds must be 32 bytes.
@@ -46,8 +47,9 @@ function getHumanName(namespec, filepath) {
         case "path":
             // Get the filename at the end of the passed path.
             const namebase = path.basename(filepath)
-            // Strip off the extension and use this as the content name.
-            name = namebase.substring(0, namebase.lastIndexOf('.'))
+            // Strip off the extension if it exists. TODO: Remove?
+            //const ext = namebase.lastIndexOf('.')
+            name = namebase//ext < 0 ? namebase : namebase.substring(0, ext)
         break
         default:
             throw(`Unexpected namespec ${namespec}. Should be 'path'.`)
@@ -73,7 +75,7 @@ async function start() {
 
         const roots = await glob(globspec).then(async files => {
             const roots = []
-            for (let i = 0; i < files.length; i++) {
+            for (let i = 0; i < files.length /* / 128 */; i++) {
                 
                 const metadata = JSON.stringify({
                     "published": published,
@@ -126,17 +128,18 @@ async function start() {
                 options.body = form
 
                 const humanName = getHumanName(namespec, files[i])
-                console.log(humanName)
+                //console.log(humanName)
 
                 const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
                 //console.log(publishingKey)
 
-                const contentName = await getContentName(publishingKey, humanName)
-                console.log(contentName)
+                const contentName = await getContentName(publishingKey)
+                //console.log(contentName)
 
                 // TODO: Send key to server?
                 // Pack the key in a protobuf for transmission.
-                const encodedKey = crypto.keys.marshalPrivateKey(publishingKey)
+                const protocolKey = crypto.keys.marshalPrivateKey(publishingKey)
+                const encodedKey = protocolKey.toString('base64')
  
                 // TODO: Calculate the name so we can build it into the URL.
                 //const name = Buffer.from(sha256.hash(secret + files[i])).toString('hex')
@@ -149,13 +152,16 @@ async function start() {
                 // Push the CID into the roots list.
                 responseBody = await fetch(url, options).then(response => response.json())
                 responseBody.metadata.box.name = `/kbt/${contentName}`
-                //console.log(responseBody)
+                responseBody.metadata.box.humanName = humanName
+                responseBody.metadata.box.contentPath = files[i]
+                console.log(JSON.stringify(responseBody))
                 roots.push(responseBody)
             }
             return roots
         })
         core.setOutput('roots', roots)
     } catch (e) {
+        console.log(e)
         core.setFailed(e.message)
         throw e
     }
