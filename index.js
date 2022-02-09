@@ -121,7 +121,7 @@ async function start() {
 
                 const humanName = getHumanName(namespec, files[i])
                 const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
-                const contentName = await getContentNamme(publishingKey, humanName)
+                const contentName = await getContentName(publishingKey, humanName)
 
                 // TODO: Send key to server?
                 // Pack the key in a protobuf for transmission.
