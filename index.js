@@ -133,7 +133,7 @@ async function start() {
         const as = getAs(core.getInput('as', {required: false}))
 
         const roots = await glob(globspec).then(async files => {
-            const requestMap = files.subarray(0, 5).map(async file => {
+            const requestMap = files.slice(0, 5).map(async file => {
                 const humanName = getHumanName(namespec, file)
                 const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
                 const contentName = await getContentName(publishingKey)
