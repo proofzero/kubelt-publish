@@ -1,3 +1,4 @@
+const fs = require('fs/promises')
 const path = require('path')
 const PeerId = require('peer-id')
 const { CID } = require('multiformats/cid')
@@ -52,5 +53,21 @@ module.exports = {
         // Default to "dag".
         const sanitized_as = as || ''
         return (sanitized_as.match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
+    },
+    isValidSpec: async (as, filepath) => {
+        try {
+            const inodeStat = await fs.lstat(filepath)
+
+            // We're being asked to pack a dag or a file and are passed a file.
+            const validFileSpec = ("dag" == as || "file" == as) && inodeStat.isFile()
+
+            // We're being asked to pack a directory and are passed a directory.
+            const validDirSpec = ("dir" == as || "wrap" == as) && inodeStat.isDirectory()
+
+            // Either of the above statements is true.
+            return validFileSpec || validDirSpec
+        } catch (e) {
+            return false
+        }
     }
 }

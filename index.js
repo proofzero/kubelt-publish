@@ -1,28 +1,15 @@
-const lib = require('./library')
-const fs = require('fs')
-const path = require('path')
+    const lib = require('./library')
+    const fs = require('fs')
+    const path = require('path')
 
-const core = require('@actions/core')
-const fetch = require('node-fetch')
-const crypto = require('libp2p-crypto')
-const FormData = require('form-data')
+    const core = require('@actions/core')
+    const fetch = require('node-fetch')
+    const crypto = require('libp2p-crypto')
+    const FormData = require('form-data')
 
-const util = require('util')
+    const util = require('util')
 const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
-
-function isValidSpec(as, filepath) {
-    const inodeStat = fs.lstatSync(filepath)
-
-    // We're being asked to pack a dag or a file and are passed a file.
-    const validFileSpec = ("dag" == as || "file" == as) && inodeStat.isFile()
-
-    // We're being asked to pack a directory and are passed a directory.
-    const validDirSpec = ("dir" == as || "wrap" == as) && inodeStat.isDirectory()
-
-    // Either of the above statements is true.
-    return validFileSpec || validDirSpec
-}
 
 async function getDAGForm(filepath) {
     const { stdin, stdout } = await exec(`node ${__dirname}/vendor/cli.js courtyard convert ${filepath}`)
@@ -45,7 +32,7 @@ async function getDirectoryForm(filepath, wrapDirectory) {
 }
 
 async function getForm(as, filepath) {
-    if (!isValidSpec(as, filepath)) {
+    if (!await lib.isValidSpec(as, filepath)) {
         throw ('Invalid as/file pairing:', as, filepath)
     }
 
@@ -77,7 +64,7 @@ async function start() {
         const globspec = core.getInput('glob', { required: true })
         const namespec = core.getInput('name', { required: false }) || 'path'
         const published = core.getBooleanInput('published', { required: false }) || false
-        const as = getAs(core.getInput('as', { required: false }))
+        const as = lib.getAs(core.getInput('as', { required: false }))
 
         const roots = await glob(globspec).then(async files => {
             const requestMap = files.slice(0, 5).map(async file => {

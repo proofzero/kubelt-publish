@@ -55,3 +55,72 @@ tap.test('Test the "as" parameter', t => {
 
     t.end()
 })
+
+tap.test('Test the "isValidSpec" function', async t => {
+    const as_dag = 'dag'
+    const as_file = 'file'
+    const as_dir = 'dir'
+    const as_wrap = 'wrap'
+    const filepath = './test/test.js'
+    const dirpath = './test/fixtures'
+
+    // Positive tests:
+    const dag_is_file = await lib.isValidSpec(as_dag, filepath)
+    t.ok(dag_is_file)
+
+    const dag_is_dir = await lib.isValidSpec(as_dag, dirpath)
+    t.notOk(dag_is_dir)
+
+    const file_is_file = await lib.isValidSpec(as_file, filepath)
+    t.ok(file_is_file)
+
+    const file_is_dir = await lib.isValidSpec(as_file, dirpath)
+    t.notOk(file_is_dir)
+
+    const dir_is_file = await lib.isValidSpec(as_dir, filepath)
+    t.notOk(dir_is_file)
+
+    const dir_is_dir = await lib.isValidSpec(as_dir, dirpath)
+    t.ok(dir_is_dir)
+
+    const wrap_is_file = await lib.isValidSpec(as_wrap, filepath)
+    t.notOk(wrap_is_file)
+
+    const wrap_is_dir = await lib.isValidSpec(as_wrap, dirpath)
+    t.ok(wrap_is_dir)
+
+    // Negative tests:
+    const as_bad = 'this_is_not_a_valid_as_spec'
+    const as_null = null
+    const as_undef = undefined
+    const bad_filepath = ''
+    const null_filepath = null
+    const undef_filepath = undefined
+    const bad_dirpath = ''
+    const null_dirpath = null
+    const undef_dirpath = undefined
+
+    const bad_is_file = await lib.isValidSpec(as_bad, filepath)
+    t.notOk(bad_is_file)
+
+    const bad_is_dir = await lib.isValidSpec(as_bad, dirpath)
+    t.notOk(bad_is_dir)
+
+    const bad_is_badfile = await lib.isValidSpec(as_bad, bad_filepath)
+    t.notOk(bad_is_badfile)
+
+    const bad_is_baddir = await lib.isValidSpec(as_bad, bad_dirpath)
+    t.notOk(bad_is_baddir)
+
+    const bad_is_nullfile = await lib.isValidSpec(as_bad, null_filepath)
+    t.notOk(bad_is_nullfile)
+
+    const bad_is_undeffile = await lib.isValidSpec(as_bad, undef_filepath)
+    t.notOk(bad_is_undeffile)
+
+    const bad_is_nulldir = await lib.isValidSpec(as_bad, null_dirpath)
+    t.notOk(bad_is_nulldir)
+
+    const bad_is_undefdir = await lib.isValidSpec(as_bad, undef_dirpath)
+    t.notOk(bad_is_undefdir)
+})
