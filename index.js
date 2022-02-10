@@ -140,7 +140,7 @@ async function start() {
 
                 // TODO: Should be private key?
                 const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
-                const encodedPubKey = protocolKey.toString('base64')
+                const encodedPubKey = protocolPubKey.toString('base64')
 
                 const form = await getForm(as, file)
                 const options = {
