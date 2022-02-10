@@ -95,29 +95,30 @@ async function isValidSpec(as, filepath) {
     }
 }
 
-async function getDAGForm(form, filepath) {
+async function getDAGCarfile(filepath) {
     let tempfile = null
-    return tmp.file().then(async f => {
-        tempfile = f
-        return fs.readFile(filepath)
-            .then(async text => {
-                const codec = 'dag-json'
-                await packDAG.writeCarFile(tempfile.path, codec, JSON.parse(text))
-            }).then(async () => fs.open(tempfile.path))
-            .then(async (fd) => {
-                form.append('data', fd.createReadStream())
-            })
-    })
-}
-
-async function getFileForm(form, filepath) {
-    return fs.open(filepath)
-        .then(async fd => {
-            form.append('data', fd.createReadStream())
+    return tmp.file()
+        .then(async f => {
+            tempfile = f
+            return fs.readFile(filepath)
+                .then(async text => {
+                    const codec = 'dag-cbor'
+                    await packDAG.writeCarFile(tempfile.path, codec, JSON.parse(text))
+                })
+                .then(async () => fs.open(tempfile.path))
         })
 }
 
-async function getDirectoryForm(form, filepath, wrapDirectory) {
+async function getFileForm(filepath) {
+    return fs.open(filepath)
+        .then(async fd => {
+            const form = new FormData()
+            form.append('data', fd.createReadStream())
+            return { form, fd }
+        })
+}
+
+async function getDirectoryCarfile(filepath, wrapDirectory) {
     let tempfile = null
     return tmp.file().then(async f => {
         tempfile = f
@@ -127,12 +128,9 @@ async function getDirectoryForm(form, filepath, wrapDirectory) {
             wrapWithDirectory: wrapDirectory,
         })
     }).then(async () => fs.open(tempfile.path))
-    .then(async (fd) => {
-        form.append('data', fd.createReadStream())
-    })
 }
 
-async function getForm(form, as, filepath) {
+async function getBody(as, filepath) {
     return isValidSpec(as, filepath)
         .then(valid => {
             if (!valid) {
@@ -140,16 +138,16 @@ async function getForm(form, as, filepath) {
             }
 
             switch (as) {
-                case "dag": {
-                    return getDAGForm(form, filepath)
+                case 'dag': {
+                    return getDAGCarfile(filepath)
                 }
-                case "file": {
-                    return getFileForm(form, filepath)
+                case 'file': {
+                    return getFileForm(filepath)
                 }
-                case "dir":
-                case "wrap": {
-                    const wrapDirectory = "wrap" == as
-                    return getDirectoryForm(form, filepath, wrapDirectory)
+                case 'dir':
+                case 'wrap': {
+                    const wrapDirectory = 'wrap' == as
+                    return getDirectoryCarfile(filepath, wrapDirectory)
                 }
                 default: {
                     throw ('Invalid "as" parameter: ', as)
@@ -170,13 +168,18 @@ async function start(secret, globspec, namespec, published, as, limit = -1, endp
             const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
             const encodedPubKey = protocolPubKey.toString('base64')
 
-            const form = new FormData()
-            await getForm(form, as, file)
+            const body = await getBody(as, file)
+            let headers = null
+
+            // File types are sent through form data so need the multiparts.
+            if ('file' == as) {
+                headers = body.form.getHeaders()
+            }
 
             const options = {
                 method: 'POST',
                 headers: {
-                    ...form.getHeaders(),
+                    ...headers,
                     'X-Metadata': JSON.stringify({
                         'published': published,
                         'human': humanName,
@@ -190,12 +193,25 @@ async function start(secret, globspec, namespec, published, as, limit = -1, endp
                 pause: 500,     // node-fetch-retry option -- millisecond delay
                 silent: false,  // node-fetch-retry option -- console output?
             }
-            options.body = form.stream()
+
+            // File types are sent through form data so need the encoded body.
+            if ('file' == as) {
+                options.body = body.form.stream()
+            } else {
+                options.body = body.createReadStream()
+            }
 
             const url = new URL(contentName, new URL('/v0/api/content/kbt/', endpoint))
             return fetch(url, options)
                 .then(response => response.json())
                 .catch(e => { console.log('failed at url: ', url, e) })
+                .finally(() => {
+                    if ('file' != as) {
+                        body.close()
+                    } else {
+                        body.fd.close()
+                    }
+                })
         })
 
         return Promise.all(requestMap)
@@ -208,9 +224,9 @@ module.exports = {
     getHumanName,
     getAs,
     isValidSpec,
-    getDAGForm,
+    getDAGCarfile,
     getFileForm,
-    getDirectoryForm,
-    getForm,
+    getDirectoryCarfile,
+    getBody,
     start,
 }
