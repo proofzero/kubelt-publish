@@ -130,7 +130,7 @@ async function start() {
         const globspec = core.getInput('glob', { required: true })
         const namespec = core.getInput('name', { required: false }) || 'path'
         const published = core.getBooleanInput('published', { required: false }) || false
-        const as = getAs(core.getInput('as', {required: false})
+        const as = getAs(core.getInput('as', {required: false}))
 
         const roots = await glob(globspec).then(async files => {
             const requestMap = files.map(async file => {
