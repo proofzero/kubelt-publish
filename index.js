@@ -1,3 +1,4 @@
+const lib = require('./library')
 const fs = require('fs')
 const path = require('path')
 
@@ -5,57 +6,10 @@ const core = require('@actions/core')
 const fetch = require('node-fetch')
 const crypto = require('libp2p-crypto')
 const FormData = require('form-data')
-const { base36 } = require('multiformats/bases/base36')
-const PeerId = require('peer-id')
-const { CID } = require('multiformats/cid')
 
 const util = require('util')
 const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
-
-async function getContentName(publishingKey) {
-    const peer = await PeerId.createFromPrivKey(publishingKey.bytes)
-    const peerId = peer.toString()
-    const cid = CID.parse(peerId)
-    return cid.toString(base36)
-}
-
-async function getPublishingKey(secret, name) {
-    // Get the key object out of the protobuf.
-    const secretKey = await crypto.keys.unmarshalPrivateKey(secret)
-
-    // Sign the human name to seed the generation of a publishing key for it.
-    // TODO: Use a 32 bit hash (blake2). Plus disambiguating context.
-    const signature = await secretKey.sign(Buffer.from(name))
-
-    // ed25519 seeds must be 32 bytes.
-    const seedStartIndex = 0
-    const seedLength = 32
-    const seed = signature.slice(seedStartIndex, seedLength)
-
-    // Return a 2048 bit ed25519 keypair with the above seed.
-    const algo = 'ed25519'
-    const bitwidth = 2048
-    return crypto.keys.generateKeyPairFromSeed(algo, seed, bitwidth)
-}
-
-function getHumanName(namespec, filepath) {
-    let name = ''
-    // TODO: Currently namespec is only expected to be "path". Add other specs.
-    // TODO: Should probably done inline with the "as" parameter handling.
-    switch (namespec) {
-        case "path":
-            // Get the filename at the end of the passed path.
-            const namebase = path.basename(filepath)
-            // Strip off the extension if it exists. TODO: Remove?
-            //const ext = namebase.lastIndexOf('.')
-            name = namebase//ext < 0 ? namebase : namebase.substring(0, ext)
-        break
-        default:
-            throw(`Unexpected namespec ${namespec}. Should be 'path'.`)
-    }
-    return name
-}
 
 // Sanitize the "as" input parameter.
 function getAs(as) {
@@ -130,13 +84,13 @@ async function start() {
         const globspec = core.getInput('glob', { required: true })
         const namespec = core.getInput('name', { required: false }) || 'path'
         const published = core.getBooleanInput('published', { required: false }) || false
-        const as = getAs(core.getInput('as', {required: false}))
+        const as = getAs(core.getInput('as', { required: false }))
 
         const roots = await glob(globspec).then(async files => {
             const requestMap = files.slice(0, 5).map(async file => {
-                const humanName = getHumanName(namespec, file)
-                const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
-                const contentName = await getContentName(publishingKey)
+                const humanName = lib.getHumanName(namespec, file)
+                const publishingKey = await lib.getPublishingKey(Buffer.from(secret, 'base64'), humanName)
+                const contentName = await lib.getContentName(publishingKey)
 
                 // TODO: Should be private key?
                 const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
