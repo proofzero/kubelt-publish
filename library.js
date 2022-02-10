@@ -1,9 +1,21 @@
-const fs = require('fs/promises')
-const path = require('path')
+// For generating our own keys:
+const crypto = require('libp2p-crypto')
+
+// For calculating content names:
 const PeerId = require('peer-id')
 const { CID } = require('multiformats/cid')
 const { base36 } = require('multiformats/bases/base36')
-const crypto = require('libp2p-crypto')
+
+// For HTTP comms:
+const fetch = require('node-fetch')
+const FormData = require('form-data')
+
+// For filesystem ops:
+const fs = require('fs/promises')
+const path = require('path')
+const util = require('util')
+const glob = util.promisify(require('glob'))
+const exec = util.promisify(require('child_process').exec)
 
 module.exports = {
     getContentName: async (publishingKey) => {
@@ -68,6 +80,99 @@ module.exports = {
             return validFileSpec || validDirSpec
         } catch (e) {
             return false
+        }
+    },
+    getDAGForm: async (filepath) => {
+        const form = new FormData()
+        return exec(`node ${__dirname}/vendor/cli.js courtyard convert ${filepath}`)
+            .then(async () => fs.open('./output.car'))
+            .then(async (fd) => {
+                form.append('data', fd.createReadStream())
+            }).catch(e => {
+                console.log(e)
+                throw e
+            })
+    },
+    getFileForm: async (filepath) => {
+        const fd = await fs.open(filepath)
+        const form = new FormData()
+        form.append('data', fd.createReadStream())
+        return form
+    },
+    getDirectoryForm: async (filepath, wrapDirectory) => {
+        const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${filepath} --output output.car --wrapWithDirectory ${wrapDirectory}`)
+        const fd = await fs.open('./output.car')
+        const form = new FormData()
+        form.append('data', fd.createReadStream())
+        return form
+    },
+    getForm: async (as, filepath) => {
+        if (!await lib.isValidSpec(as, filepath)) {
+            throw ('Invalid as/file pairing:', as, filepath)
+        }
+
+        let form = null
+
+        switch(as) {
+            case "dag": {
+                form = await getDAGForm(filepath)
+            }
+            case "file": {
+                form = getFileForm(filepath)
+            }
+            case "dir":
+            case "wrap": {
+                const wrapDirectory = "wrap" == as
+                form = await getDirectoryForm(filepath, wrapDirectory)
+            }
+            default: {
+                throw ('Invalid "as" parameter: ', as)
+            }
+        }
+
+        return form
+    },
+    start: async (secret, globspec, namespec, published, as) => {
+        try {
+            const roots = await glob(globspec).then(async files => {
+                const requestMap = files.slice(0, 5).map(async file => {
+                    const humanName = lib.getHumanName(namespec, file)
+                    const publishingKey = await lib.getPublishingKey(Buffer.from(secret, 'base64'), humanName)
+                    const contentName = await lib.getContentName(publishingKey)
+
+                    // TODO: Should be private key?
+                    const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
+                    const encodedPubKey = protocolPubKey.toString('base64')
+
+                    const form = await getForm(as, file)
+                    const options = {
+                        method: 'POST',
+                        headers: {
+                            ...form.headers,
+                            'X-Metadata': JSON.stringify({
+                                'published': published,
+                                'human': humanName,
+                                'path': file,
+                                'as': as,
+                            }),
+                            'X-Public-Key': encodedPubKey, // TODO: private key?
+                        },
+                    }
+                    options.body = form
+
+                    // TODO: Figure out `act` for local dev.
+                    //const url = new URL(name, 'http://127.0.0.1:8787/v0/api/content/kbt/')
+                    const url = new URL(contentName, 'https://api.pndo.xyz/v0/api/content/kbt/')
+                    return fetch(url, options).then(response => response.json())
+                })
+
+                return Promise.all(requestMap)
+            })
+            core.setOutput('roots', roots)
+        } catch (e) {
+            console.log(e)
+            core.setFailed(e.message)
+            throw e
         }
     }
 }
