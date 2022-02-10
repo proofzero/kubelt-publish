@@ -25,7 +25,7 @@ async function getPublishingKey(secret, name) {
     const secretKey = await crypto.keys.unmarshalPrivateKey(secret)
 
     // Sign the human name to seed the generation of a publishing key for it.
-    // Use a 32 bit hash (blake2). Plus disambiguating context.
+    // TODO: Use a 32 bit hash (blake2). Plus disambiguating context.
     const signature = await secretKey.sign(Buffer.from(name))
 
     // ed25519 seeds must be 32 bytes.
@@ -57,107 +57,114 @@ function getHumanName(namespec, filepath) {
     return name
 }
 
+// Sanitize the "as" input parameter.
+function getAs(as) {
+    // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap".
+    // Default to "dag".
+    return (as.match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
+}
+
+function isValidSpec(as, filepath) {
+    const inodeStat = fs.lstatSync(filepath)
+
+    // We're being asked to pack a dag or a file and are passed a file.
+    const validFileSpec = ("dag" == as || "file" == as) && inodeStat.isFile()
+
+    // We're being asked to pack a directory and are passed a directory.
+    const validDirSpec = ("dir" == as || "wrap" == as) && inodeStat.isDirectory()
+
+    // Either of the above statements is true.
+    return validFileSpec || validDirSpec
+}
+
+async function getDAGForm(filepath) {
+    const { stdin, stdout } = await exec(`node ${__dirname}/vendor/cli.js courtyard convert ${filepath}`)
+    const form = new FormData()
+    form.append('data', fs.createReadStream('./output.car'))
+    return form
+}
+
+function getFileForm(filepath) {
+    const form = new FormData()
+    form.append('data', fs.createReadStream(filepath))
+    return form
+}
+
+async function getDirectoryForm(filepath, wrapDirectory) {
+    const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${filepath} --output output.car --wrapWithDirectory ${wrapDirectory}`)
+    const form = new FormData()
+    form.append('data', fs.createReadStream('./output.car'))
+    return form
+}
+
+async function getForm(as, filepath) {
+    if (!isValidSpec(as, filepath)) {
+        throw ('Invalid as/file pairing:', as, filepath)
+    }
+
+    let form = null
+
+    switch(as) {
+        case "dag": {
+            form = await getDAGForm(filepath)
+        }
+        case "file": {
+            form = getFileForm(filepath)
+        }
+        case "dir":
+        case "wrap": {
+            const wrapDirectory = "wrap" == as
+            form = await getDirectoryForm(filepath, wrapDirectory)
+        }
+        default: {
+            throw ('Invalid "as" parameter: ', as)
+        }
+    }
+
+    return form
+}
+
 async function start() {
     try {
         const secret = core.getInput('secret', { required: true })
         const globspec = core.getInput('glob', { required: true })
         const namespec = core.getInput('name', { required: false }) || 'path'
         const published = core.getBooleanInput('published', { required: false }) || false
-
-        console.log({
-            globspec: globspec,
-            namespec: namespec,
-            published: published,
-        })
-
-        // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap", defaulting to "dag".
-        const as = (core.getInput('as', { required: false }).match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
+        const as = getAs(core.getInput('as', {required: false})
 
         const roots = await glob(globspec).then(async files => {
-            const roots = []
-            for (let i = 0; i < files.length /* / 128 */; i++) {
-                
-                const metadata = JSON.stringify({
-                    "published": published,
-                    "as": as,
-                })
+            const requestMap = files.map(async file => {
+                const humanName = getHumanName(namespec, file)
+                const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
+                const contentName = await getContentName(publishingKey)
 
-                const form = new FormData()
+                // TODO: Should be private key?
+                const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
+                const encodedPubKey = protocolKey.toString('base64')
 
-                const inodeStat = fs.lstatSync(files[i])
-
-                if ("dag" == as) {
-                    if (!inodeStat.isFile()) {
-                        throw ('"dag" parameter requires a file, got: ', JSON.stringify(inodeStat))
-                    }
-                    // TODO: Make this call via SDK instead of CLI.
-                    // TODO: Check failure to pack.
-                    // TODO: When the `json` command lands, s/courtyard/json/.
-                    const { stdin, stdout } = await exec(`node ${__dirname}/vendor/cli.js courtyard convert ${files[i]}`)
-                    //options.body = fs.createReadStream('./output.car')
-                    form.append('data', fs.createReadStream('./output.car'))
-                } else if ("file" == as) {
-                    if (!inodeStat.isFile()) {
-                        throw ('"file" parameter requires a file, got: ', JSON.stringify(inodeStat))
-                    }
-                    //options.body = fs.createReadStream(files[i])
-                    form.append('data', fs.createReadStream(files[i]))
-                } else if ("dir" == as || "wrap" == as) {
-                    if (!inodeStat.isDirectory()) {
-                        throw ('"dir" parameter requires a directory, got: ', JSON.stringify(inodeStat))
-                    }
-                    // TODO: Use a secure upload key and do this client-side?
-                    // TODO: Pack the directory by adding all the files to the body.
-                    // TODO: What if there are duplicate names? Is there a path differentiator?
-                    const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${files[i]} --output output.car --wrapWithDirectory ${"wrap" == as}`)
-                    form.append('data', fs.createReadStream('./output.car'))
-                } else {
-                    throw ('Invalid "as" parameter: ', as)
-                }
-
+                const form = await getForm(as, file)
                 const options = {
                     method: 'POST',
-                    headers: { // TODO 'Content-Type'?
+                    headers: {
                         ...form.headers,
-                        'X-Metadata': metadata, // TODO: Check failure to encode.
-                        'X-Public-Key': secret,
-                        'X-Signature': secret, // Generate from key (sig of pubkey).
+                        'X-Metadata': JSON.stringify({
+                            'published': published,
+                            'human': humanName,
+                            'path': file,
+                            'as': as,
+                        }),
+                        'X-Public-Key': encodedPubKey, // TODO: private key?
                     },
                 }
-
                 options.body = form
 
-                const humanName = getHumanName(namespec, files[i])
-                //console.log(humanName)
-
-                const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
-                //console.log(publishingKey)
-
-                const contentName = await getContentName(publishingKey)
-                //console.log(contentName)
-
-                // TODO: Send key to server?
-                // Pack the key in a protobuf for transmission.
-                const protocolKey = crypto.keys.marshalPrivateKey(publishingKey)
-                const encodedKey = protocolKey.toString('base64')
- 
-                // TODO: Calculate the name so we can build it into the URL.
-                //const name = Buffer.from(sha256.hash(secret + files[i])).toString('hex')
-
-                // TODO: Figure out how to make work with `act` for local dev.
+                // TODO: Figure out `act` for local dev.
                 //const url = new URL(name, 'http://127.0.0.1:8787/v0/api/content/kbt/')
                 const url = new URL(contentName, 'https://api.pndo.xyz/v0/api/content/kbt/')
-                //console.log(url)
+                return fetch(url, options).then(response => response.json())
+            })
 
-                // Push the CID into the roots list.
-                responseBody = await fetch(url, options).then(response => response.json())
-                responseBody.metadata.box.name = `/kbt/${contentName}`
-                responseBody.metadata.box.humanName = humanName
-                responseBody.metadata.box.contentPath = files[i]
-                console.log(JSON.stringify(responseBody))
-                roots.push(responseBody)
-            }
-            return roots
+            return Promises.all(requestMap)
         })
         core.setOutput('roots', roots)
     } catch (e) {
