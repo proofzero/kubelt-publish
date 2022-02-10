@@ -164,7 +164,7 @@ async function start() {
                 return fetch(url, options).then(response => response.json())
             })
 
-            return Promises.all(requestMap)
+            return Promise.all(requestMap)
         })
         core.setOutput('roots', roots)
     } catch (e) {
