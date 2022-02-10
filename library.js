@@ -45,5 +45,12 @@ module.exports = {
                 throw(`Unexpected namespec ${namespec}. Should be 'path'.`)
         }
         return name
+    },
+    // Sanitize the "as" input parameter.
+    getAs: (as) => {
+        // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap".
+        // Default to "dag".
+        const sanitized_as = as || ''
+        return (sanitized_as.match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
     }
 }

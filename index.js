@@ -11,13 +11,6 @@ const util = require('util')
 const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
 
-// Sanitize the "as" input parameter.
-function getAs(as) {
-    // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap".
-    // Default to "dag".
-    return (as.match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
-}
-
 function isValidSpec(as, filepath) {
     const inodeStat = fs.lstatSync(filepath)
 

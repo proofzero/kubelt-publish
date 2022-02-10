@@ -25,3 +25,33 @@ tap.test('We get valid human names', t => {
     t.equal(human_name, 'machine')
     t.end()
 })
+
+tap.test('Test the "as" parameter', t => {
+    // Positive tests:
+    const as_dag = 'dag'
+    t.equal(as_dag, lib.getAs(as_dag))
+
+    const as_file = 'file'
+    t.equal(as_file, lib.getAs(as_file))
+
+    const as_dir = 'dir'
+    t.equal(as_dir, lib.getAs(as_dir))
+
+    const as_wrap = 'wrap'
+    t.equal(as_wrap, lib.getAs(as_wrap))
+
+    // Negative tests:
+    const as_bad = 'this_is_a_bad_as_parameter'
+    t.equal(as_dag, lib.getAs(as_bad))
+
+    const as_empty = ''
+    t.equal(as_dag, lib.getAs(as_empty))
+
+    const as_null = null
+    t.equal(as_dag, lib.getAs(as_null))
+
+    const as_undef = undefined
+    t.equal(as_dag, lib.getAs(as_undef))
+
+    t.end()
+})
