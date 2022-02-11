@@ -2,6 +2,8 @@ const tap = require('tap')
 const lib = require('../library')
 
 tap.test('We correctly generate content names', async t => {
+    const crypto = require('libp2p-crypto')
+
     // Test fixture key generated and exported using go-ipfs node then base64 encoded.
     const b64_key   = 'CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ='
 
@@ -10,7 +12,7 @@ tap.test('We correctly generate content names', async t => {
     const key       = await crypto.keys.unmarshalPrivateKey(pbf_key)
 
     // TEST: We should be able to generate names identical to IPNS names.
-    const name      = lib.getContentName(key)
+    const name      = await lib.getContentName(key)
 
     // Test fixture here is the name of the above key from go-ipfs.
     t.equal(name, 'k51qzi5uqu5dk24kl1kfcp0uh436l6t96op3zqaqhhhmifix19jkog7j7qa238')
@@ -180,6 +182,36 @@ tap.test('Test getFileForm', async t => {
 
     // Negative test: if we try to do something invalid, promise rejects.
     const promise = lib.getFileForm(bad_file_fixture)
+    await t.rejects(promise)
+
+    t.end()
+})
+
+tap.test('Test getDirectoryForm', async t => {
+    const FormData = require('form-data')
+    const dir_fixture = './test/fixtures'
+    const bad_dir_fixture = './test/doesnt_exist'
+
+    // Fixture for testing directory wrapping (ie, store /* or /)
+    const wrap = true
+
+    // Fixture to check that 'data' exists and has reasonable multipart headers.
+    const stream_fixture = /Content-Disposition: form-data; name="data"\r\nContent-Type: application\/octet-stream\r\n\r\n/
+
+    // Make a form-data object, pack up a DAG, and add the stream to the form.
+    const wrapform = new FormData()
+    await lib.getDirectoryForm(wrapform, dir_fixture, wrap)
+
+    // Kind of a lame test, but validates that there is a form parameter called
+    t.match(wrapform._streams[0], stream_fixture)
+
+    // Test the above, but flip the wrap flag.
+    const dirform = new FormData()
+    await lib.getDirectoryForm(dirform, dir_fixture, !wrap)
+    t.match(dirform._streams[0], stream_fixture)
+
+    // Negative test: if we try to do something invalid, promise rejects.
+    const promise = lib.getFileForm(bad_dir_fixture)
     await t.rejects(promise)
 
     t.end()

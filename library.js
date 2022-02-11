@@ -93,9 +93,7 @@ module.exports = {
             .then(async () => fs.open('./output.car'))
             .then(async (fd) => {
                 form.append('data', fd.createReadStream())
-            })/*.catch(e => {
-                throw e
-            })/**/
+            })
     },
     // tested
     getFileForm: async (form, filepath) => {
@@ -104,12 +102,13 @@ module.exports = {
                 form.append('data', fd.createReadStream())
             })
     },
-    getDirectoryForm: async (filepath, wrapDirectory) => {
-        const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${filepath} --output output.car --wrapWithDirectory ${wrapDirectory}`)
-        const fd = await fs.open('./output.car')
-        const form = new FormData()
-        form.append('data', fd.createReadStream())
-        return form
+    // tested
+    getDirectoryForm: async (form, filepath, wrapDirectory) => {
+        return exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${filepath} --output output.car --wrapWithDirectory ${wrapDirectory}`)
+            .then(async () => fs.open('./output.car'))
+            .then(async (fd) => {
+                form.append('data', fd.createReadStream())
+            })
     },
     getForm: async (as, filepath) => {
         if (!await lib.isValidSpec(as, filepath)) {
