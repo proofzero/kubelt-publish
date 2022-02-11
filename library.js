@@ -82,8 +82,7 @@ module.exports = {
             return false
         }
     },
-    getDAGForm: async (filepath) => {
-        const form = new FormData()
+    getDAGForm: async (form, filepath) => {
         return exec(`node ${__dirname}/vendor/cli.js courtyard convert ${filepath}`)
             .then(async () => fs.open('./output.car'))
             .then(async (fd) => {

@@ -125,14 +125,16 @@ tap.test('Test the "isValidSpec" function', async t => {
     t.notOk(bad_is_undefdir)
 })
 
+const FormData = require('form-data')
 tap.test('Test getDAGForm', async t => {
     const dag_fixture = './test/fixtures/unrevealed.json'
     const bad_dag_fixture = './test/fixtures/unrevealed.car'
 
-    const form = await lib.getDAGForm(dag_fixture)
+    const form = new FormData()
+    await lib.getDAGForm(form, dag_fixture)
+
     console.log(form)
 
-    //const form_fixture = form
     //t.match(form, form_fixture)
     //t.expectUncaughtException(await lib.getDAGForm(bad_dag_fixture))
 
