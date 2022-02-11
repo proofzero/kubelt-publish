@@ -83,14 +83,13 @@ module.exports = {
         }
     },
     getDAGForm: async (form, filepath) => {
-        return exec(`node ${__dirname}/vendor/cli.js courtyard convert ${filepath}`)
+        return exec(`node ${__dirname}/vendor/cli.js courtyard convert "${filepath}"`)
             .then(async () => fs.open('./output.car'))
             .then(async (fd) => {
                 form.append('data', fd.createReadStream())
-            }).catch(e => {
-                console.log(e)
+            })/*.catch(e => {
                 throw e
-            })
+            })/**/
     },
     getFileForm: async (filepath) => {
         const fd = await fs.open(filepath)

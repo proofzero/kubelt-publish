@@ -1,6 +1,22 @@
 const tap = require('tap')
 const lib = require('../library')
 
+tap.test('We correctly generate content names', async t => {
+    // Test fixture key generated and exported using go-ipfs node then base64 encoded.
+    const b64_key   = 'CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ='
+
+    // Preamble: decode and unmarshal the key.
+    const pbf_key   = Buffer.from(b64_key, 'base64')
+    const key       = await crypto.keys.unmarshalPrivateKey(pbf_key)
+
+    // TEST: We should be able to generate names identical to IPNS names.
+    const name      = lib.getContentName(key)
+
+    // Test fixture here is the name of the above key from go-ipfs.
+    t.equal(name, 'k51qzi5uqu5dk24kl1kfcp0uh436l6t96op3zqaqhhhmifix19jkog7j7qa238')
+    t.end()
+})
+
 tap.test('We get the right content names', async t => {
     // This simulates what is stored in the Github Secret: a base64 encoded
     // protobuf containing a libp2p key.
@@ -125,18 +141,24 @@ tap.test('Test the "isValidSpec" function', async t => {
     t.notOk(bad_is_undefdir)
 })
 
-const FormData = require('form-data')
 tap.test('Test getDAGForm', async t => {
+    const FormData = require('form-data')
     const dag_fixture = './test/fixtures/unrevealed.json'
     const bad_dag_fixture = './test/fixtures/unrevealed.car'
 
+    // 'data' that has reasonable multipart headers.
+    const stream_fixture = /Content-Disposition: form-data; name="data"\r\nContent-Type: application\/octet-stream\r\n\r\n/
+
+    // Make a form-data object, pack up a DAG, and add the stream to the form.
     const form = new FormData()
     await lib.getDAGForm(form, dag_fixture)
 
-    console.log(form)
+    // Kind of a lame test, but validates that there is a form parameter called
+    t.match(form._streams[0], stream_fixture)
 
-    //t.match(form, form_fixture)
-    //t.expectUncaughtException(await lib.getDAGForm(bad_dag_fixture))
+    // Negative test: if we try to do something invalid, promise rejects.
+    const promise = lib.getDAGForm(bad_dag_fixture)
+    await t.rejects(promise)
 
     t.end()
 })
