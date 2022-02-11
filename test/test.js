@@ -146,7 +146,7 @@ tap.test('Test getDAGForm', async t => {
     const dag_fixture = './test/fixtures/unrevealed.json'
     const bad_dag_fixture = './test/fixtures/unrevealed.car'
 
-    // 'data' that has reasonable multipart headers.
+    // Fixture to check that 'data' exists and has reasonable multipart headers.
     const stream_fixture = /Content-Disposition: form-data; name="data"\r\nContent-Type: application\/octet-stream\r\n\r\n/
 
     // Make a form-data object, pack up a DAG, and add the stream to the form.
@@ -158,6 +158,28 @@ tap.test('Test getDAGForm', async t => {
 
     // Negative test: if we try to do something invalid, promise rejects.
     const promise = lib.getDAGForm(bad_dag_fixture)
+    await t.rejects(promise)
+
+    t.end()
+})
+
+tap.test('Test getFileForm', async t => {
+    const FormData = require('form-data')
+    const file_fixture = './test/fixtures/unrevealed.json'
+    const bad_file_fixture = './test/fixtures/unrevealed.doesnt.exist.car'
+
+    // Fixture to check that 'data' exists and has reasonable multipart headers.
+    const stream_fixture = /Content-Disposition: form-data; name="data"\r\nContent-Type: application\/octet-stream\r\n\r\n/
+
+    // Make a form-data object, pack up a DAG, and add the stream to the form.
+    const form = new FormData()
+    await lib.getFileForm(form, file_fixture)
+
+    // Kind of a lame test, but validates that there is a form parameter called
+    t.match(form._streams[0], stream_fixture)
+
+    // Negative test: if we try to do something invalid, promise rejects.
+    const promise = lib.getFileForm(bad_file_fixture)
     await t.rejects(promise)
 
     t.end()

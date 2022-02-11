@@ -18,12 +18,14 @@ const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
 
 module.exports = {
+    // tested
     getContentName: async (publishingKey) => {
         const peer = await PeerId.createFromPrivKey(publishingKey.bytes)
         const peerId = peer.toString()
         const cid = CID.parse(peerId)
         return cid.toString(base36)
     },
+    // tested
     getPublishingKey: async (protobufKey, name) => {
         // Get the key object out of the protobuf.
         const masterKeyMaterial = await crypto.keys.unmarshalPrivateKey(protobufKey)
@@ -42,6 +44,7 @@ module.exports = {
         const bitwidth = 2048
         return crypto.keys.generateKeyPairFromSeed(algo, seed, bitwidth)
     },
+    // tested
     getHumanName: (namespec, filepath) => {
         let name = ''
         // TODO: Currently namespec is only expected to be "path". Add other specs.
@@ -59,6 +62,7 @@ module.exports = {
         }
         return name
     },
+    // tested
     // Sanitize the "as" input parameter.
     getAs: (as) => {
         // Restrict the "as" parameter to either "dag", "file", "dir", or "wrap".
@@ -66,6 +70,7 @@ module.exports = {
         const sanitized_as = as || ''
         return (sanitized_as.match("^dag$|^file$|^dir$|^wrap$") || ['dag'])[0]
     },
+    // tested
     isValidSpec: async (as, filepath) => {
         try {
             const inodeStat = await fs.lstat(filepath)
@@ -82,6 +87,7 @@ module.exports = {
             return false
         }
     },
+    // tested
     getDAGForm: async (form, filepath) => {
         return exec(`node ${__dirname}/vendor/cli.js courtyard convert "${filepath}"`)
             .then(async () => fs.open('./output.car'))
@@ -91,11 +97,12 @@ module.exports = {
                 throw e
             })/**/
     },
-    getFileForm: async (filepath) => {
-        const fd = await fs.open(filepath)
-        const form = new FormData()
-        form.append('data', fd.createReadStream())
-        return form
+    // tested
+    getFileForm: async (form, filepath) => {
+        return fs.open(filepath)
+            .then(async fd => {
+                form.append('data', fd.createReadStream())
+            })
     },
     getDirectoryForm: async (filepath, wrapDirectory) => {
         const { stdin, stdout } = await exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${filepath} --output output.car --wrapWithDirectory ${wrapDirectory}`)
