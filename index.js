@@ -8,4 +8,6 @@ const namespec  = core.getInput('name',   { required: false }) || 'path'
 const published = core.getBooleanInput('published', {required: false}) || false
 const as = lib.getAs(core.getInput('as',  { required: false }))
 
-lib.start(secret, globspec, namespec, published, as)
+(async () => {
+    core.setOutput('roots', await lib.start(secret, globspec, namespec, published, as))
+})()

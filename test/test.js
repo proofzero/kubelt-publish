@@ -206,13 +206,84 @@ tap.test('Test getDirectoryForm', async t => {
     t.match(wrapform._streams[0], stream_fixture)
 
     // Test the above, but flip the wrap flag.
-    const dirform = new FormData()
+    let dirform = new FormData()
     await lib.getDirectoryForm(dirform, dir_fixture, !wrap)
     t.match(dirform._streams[0], stream_fixture)
 
-    // Negative test: if we try to do something invalid, promise rejects.
-    const promise = lib.getFileForm(bad_dir_fixture)
+    // Negative tests: if we try to do something invalid, promise rejects.
+    let promise = lib.getDirectoryForm(dirform, bad_dir_fixture, wrap)
+    await t.rejects(promise)
+
+    promise = lib.getFileForm(dirform, bad_dir_fixture, !wrap)
     await t.rejects(promise)
 
     t.end()
+})
+
+tap.test('Test getForm', async t => {
+    const FormData = require('form-data')
+
+    // "as" param fixtures:
+    const as_dag = 'dag'
+    const as_file = 'file'
+    const as_dir = 'dir'
+    const as_wrap = 'wrap'
+    const as_bad = 'this_is_a_bad_as_parameter'
+    const as_empty = ''
+    const as_null = null
+    const as_undef = undefined
+
+    // path parameter fixtures:
+    const file_fixture = './test/fixtures/unrevealed.json'
+    const dir_fixture = './test/fixtures'
+    const bad_file_fixture = './test/fixtures/unrevealed.doesnt.exist.car'
+    const bad_dir_fixture = './test/doesnt_exist'
+
+    // Fixture to check that 'data' exists and has reasonable multipart headers.
+    const stream_fixture = /Content-Disposition: form-data; name="data"\r\nContent-Type: application\/octet-stream\r\n\r\n/
+
+    let form = new FormData()
+
+    // Kind of a lame test, but validates that there is a form parameter called
+    await lib.getForm(form, as_dag, file_fixture)
+    t.match(form._streams[0], stream_fixture)
+
+    form = new FormData()
+    await lib.getForm(form, as_file, file_fixture)
+    t.match(form._streams[0], stream_fixture)
+
+    form = new FormData()
+    await lib.getForm(form, as_dir, dir_fixture)
+    t.match(form._streams[0], stream_fixture)
+
+    form = new FormData()
+    await lib.getForm(form, as_wrap, dir_fixture)
+    t.match(form._streams[0], stream_fixture)
+
+    // Negative tests: test bad "as" then bad path.
+    form = new FormData()
+    let promise = lib.getForm(form, as_null, bad_dir_fixture)
+    await t.rejects(promise)
+
+    form = new FormData()
+    promise = lib.getForm(form, as_dag, bad_dir_fixture)
+    await t.rejects(promise)
+
+    t.end()
+})
+
+tap.test('Test the whole deal', async t => {
+    const secret_fixture = 'CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ='
+    const globspec_fixture = 'test/fixtures/*.json'
+    const namespec_fixture = 'path'
+    const published_fixture = true
+    const as_fixture = 'dag'
+
+    const result = await lib.start(secret_fixture,
+        globspec_fixture,
+        namespec_fixture,
+        published_fixture,
+        as_fixture)
+
+    console.log(result)
 })
