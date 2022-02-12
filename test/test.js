@@ -279,9 +279,35 @@ tap.test('Test the whole deal', async t => {
     const published_fixture = true
     const as_fixture = 'dag'
 
-    const result = await lib.start(secret_fixture,
+    // This should technically take a mock because it fires requests.
+    const results = await lib.start(secret_fixture,
         globspec_fixture,
         namespec_fixture,
         published_fixture,
         as_fixture)
+
+    t.match(results, [
+      {
+        expirationTtl: 86400,
+        metadata: {
+          published: true,
+          human: 'revealed.json',
+          path: 'test/fixtures/revealed.json',
+          as: 'dag',
+          box: {}
+        }
+      },
+      {
+        expirationTtl: 86400,
+        metadata: {
+          published: true,
+          human: 'unrevealed.json',
+          path: 'test/fixtures/unrevealed.json',
+          as: 'dag',
+          box: {}
+        }
+      }
+    ])
+
+    t.end()
 })

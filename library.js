@@ -170,8 +170,9 @@ async function start(secret, globspec, namespec, published, as) {
             // TODO: Figure out `act` for local dev.
             //const url = new URL(name, 'http://127.0.0.1:8787/v0/api/content/kbt/')
             const url = new URL(contentName, 'https://api.pndo.xyz/v0/api/content/kbt/')
-            return fetch(url, options)//.then(response => response.json())
+            return fetch(url, options).then(response => response.json())
         })
+
         return Promise.all(requestMap)
     })
 }
