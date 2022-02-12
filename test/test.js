@@ -284,6 +284,4 @@ tap.test('Test the whole deal', async t => {
         namespec_fixture,
         published_fixture,
         as_fixture)
-
-    console.log(result)
 })
