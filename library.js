@@ -8,7 +8,7 @@ const { base36 } = require('multiformats/bases/base36')
 
 // For HTTP comms:
 const fetch = require('node-fetch')
-const FormData = require('form-data')
+const FormData = require('multi-part')
 
 // For filesystem ops:
 const fs = require('fs/promises')
@@ -154,18 +154,20 @@ async function start(secret, globspec, namespec, published, as) {
             const options = {
                 method: 'POST',
                 headers: {
-                    ...form.headers,
+                    ...form.getHeaders(),
                     'X-Metadata': JSON.stringify({
                         'published': published,
                         'human': humanName,
                         'path': file,
                         'as': as,
                     }),
-                    'X-Public-Key': encodedPubKey, // TODO: publishing key?
+                    //'X-Public-Key': encodedPubKey, // TODO: publishing key?
                     'X-Signature': encodedPubKey, // TODO: publishing key?
                 },
             }
-            options.body = form
+            options.body = form.stream()
+
+            console.log(options.headers)
 
             // TODO: Figure out `act` for local dev.
             //const url = new URL(name, 'http://127.0.0.1:8787/v0/api/content/kbt/')
