@@ -12,4 +12,4 @@ async function go () {
     core.setOutput('roots', await lib.start(secret, globspec, namespec, published, as))
 }
 
-g()
+go()
