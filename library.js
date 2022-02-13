@@ -167,8 +167,6 @@ async function start(secret, globspec, namespec, published, as) {
             }
             options.body = form.stream()
 
-            console.log(options.headers)
-
             // TODO: Figure out `act` for local dev.
             //const url = new URL(name, 'http://127.0.0.1:8787/v0/api/content/kbt/')
             const url = new URL(contentName, 'https://api.pndo.xyz/v0/api/content/kbt/')
