@@ -306,16 +306,21 @@ tap.test('Test the whole deal', async t => {
     const namespec_fixture = 'path'
     const published_fixture = true
     const as_fixture = 'dag'
+    const limit = 10
+
+    // Assumes `wrangler dev` is serving the pando worker locally.
+    const test_endpoint = 'http://127.0.0.1:8787'
 
     // TODO: This should take a mock because it fires requests.
     const results = await lib.start(secret_fixture,
         globspec_fixture,
         namespec_fixture,
         published_fixture,
-        as_fixture)
+        as_fixture,
+        test_endpoint,
+        limit)
 
-    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu"}}}]
-
+    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te"}}}]
     t.match(results, result_fixture)
 
     t.end()

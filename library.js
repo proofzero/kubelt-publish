@@ -13,6 +13,7 @@ const FormData = require('multi-part')
 // For filesystem ops:
 const fs = require('fs/promises')
 const path = require('path')
+const tmp = require('tmp-promise')
 const util = require('util')
 const glob = util.promisify(require('glob'))
 const exec = util.promisify(require('child_process').exec)
@@ -87,8 +88,12 @@ async function isValidSpec(as, filepath) {
 }
 
 async function getDAGForm(form, filepath) {
-    return exec(`node ${__dirname}/vendor/cli.js courtyard convert "${filepath}"`)
-        .then(async () => fs.open('./output.car'))
+    let tempfile = null
+    return tmp.file().then(f => {
+            tempfile = f
+            return exec(`node ${__dirname}/vendor/cli.js courtyard convert "${filepath}" --out-file "${tempfile.path}"`)
+        })
+        .then(async () => fs.open(tempfile.path))
         .then(async (fd) => {
             form.append('data', fd.createReadStream())
         })
@@ -102,8 +107,12 @@ async function getFileForm(form, filepath) {
 }
 
 async function getDirectoryForm(form, filepath, wrapDirectory) {
-    return exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack ${filepath} --output output.car --wrapWithDirectory ${wrapDirectory}`)
-        .then(async () => fs.open('./output.car'))
+    let tempfile = null
+    return tmp.file().then(f => {
+            tempfile = f
+            return exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack "${filepath}" --output "${tempfile.path}" --wrapWithDirectory ${wrapDirectory}`)
+        })
+        .then(async () => fs.open(tempfile.path))
         .then(async (fd) => {
             form.append('data', fd.createReadStream())
         })
@@ -135,11 +144,10 @@ async function getForm(form, as, filepath) {
         })
 }
 
-async function start(secret, globspec, namespec, published, as) {
+async function start(secret, globspec, namespec, published, as, endpoint = 'https://api.pndo.xyz', limit = -1) {
     return glob(globspec).then(async files => {
-        // TODO: Make this limit a param?
-        const limit = files.length
-        const requestMap = files.slice(0, limit).map(async file => {
+        const limiter = limit < 0 ? files.length : limit
+        const requestMap = files.slice(0, limiter).map(async file => {
             const humanName = getHumanName(namespec, file)
             const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
             const contentName = await getContentName(publishingKey)
@@ -167,9 +175,8 @@ async function start(secret, globspec, namespec, published, as) {
             }
             options.body = form.stream()
 
-            // TODO: Figure out `act` for local dev.
-            //const url = new URL(name, 'http://127.0.0.1:8787/v0/api/content/kbt/')
-            const url = new URL(contentName, 'https://api.pndo.xyz/v0/api/content/kbt/')
+            const url = new URL(contentName, new URL('/v0/api/content/kbt/', endpoint))
+            console.log(url+'')
             return fetch(url, options).then(response => response.json())
         })
 

@@ -49,6 +49,7 @@
     "peer-id": "^0.16.0",
     "quadstore": "9.1.0",
     "rdf-parse": "1.9.1",
+    "tmp-promise": "^3.0.3",
     "yargs": "^17.3.1"
   },
   "devDependencies": {
