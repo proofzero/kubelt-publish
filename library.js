@@ -138,7 +138,7 @@ async function getForm(form, as, filepath) {
 async function start(secret, globspec, namespec, published, as) {
     return glob(globspec).then(async files => {
         // TODO: Make this limit a param?
-        const limit = 5//files.length
+        const limit = files.length
         const requestMap = files.slice(0, limit).map(async file => {
             const humanName = getHumanName(namespec, file)
             const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
