@@ -317,8 +317,8 @@ tap.test('Test the whole deal', async t => {
         namespec_fixture,
         published_fixture,
         as_fixture,
-        test_endpoint,
-        limit)
+        limit,
+        test_endpoint)
 
     const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te"}}}]
     t.match(results, result_fixture)

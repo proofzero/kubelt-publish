@@ -7,7 +7,7 @@ tap.test('Test all the metadata', async t => {
     const namespec_fixture = 'path'
     const published_fixture = true
     const as_fixture = 'dag'
-    const limit = -1//100
+    const limit = 10
 
     // Assumes `wrangler dev` is serving the pando worker locally.
     const test_endpoint = 'http://127.0.0.1:8787'
@@ -18,10 +18,10 @@ tap.test('Test all the metadata', async t => {
         namespec_fixture,
         published_fixture,
         as_fixture,
-        test_endpoint,
         limit)
+        //, test_endpoint)
 
-    console.log(JSON.stringify(results))/**/
+    console.log(JSON.stringify(results))
 
     t.end()
 })

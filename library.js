@@ -16,7 +16,7 @@ const path = require('path')
 const tmp = require('tmp-promise')
 const util = require('util')
 const glob = util.promisify(require('glob'))
-const exec = util.promisify(require('child_process').exec)
+const execFile = util.promisify(require('child_process').execFile)
 
 async function getContentName(publishingKey) {
     const peer = await PeerId.createFromPrivKey(publishingKey.bytes)
@@ -91,7 +91,7 @@ async function getDAGForm(form, filepath) {
     let tempfile = null
     return tmp.file().then(f => {
             tempfile = f
-            return exec(`node ${__dirname}/vendor/cli.js courtyard convert "${filepath}" --out-file "${tempfile.path}"`)
+            return execFile('node', [path.join(__dirname, 'vendor', 'cli.js'), 'courtyard', 'convert', filepath, '--out-file', tempfile.path])
         })
         .then(async () => fs.open(tempfile.path))
         .then(async (fd) => {
@@ -110,7 +110,7 @@ async function getDirectoryForm(form, filepath, wrapDirectory) {
     let tempfile = null
     return tmp.file().then(f => {
             tempfile = f
-            return exec(`node ${__dirname}/node_modules/ipfs-car/dist/cjs/cli/cli.js --pack "${filepath}" --output "${tempfile.path}" --wrapWithDirectory ${wrapDirectory}`)
+            return execFile('node', [path.join(__dirname, 'node_modules', 'ipfs-car', 'dist', 'cjs', 'cli', 'cli.js'), '--pack', filepath, '--output', tempfile.path, '--wrapWithDirectory', wrapDirectory])
         })
         .then(async () => fs.open(tempfile.path))
         .then(async (fd) => {
@@ -144,7 +144,7 @@ async function getForm(form, as, filepath) {
         })
 }
 
-async function start(secret, globspec, namespec, published, as, endpoint = 'https://api.pndo.xyz', limit = -1) {
+async function start(secret, globspec, namespec, published, as, limit = -1, endpoint = 'https://api.pndo.xyz') {
     return glob(globspec).then(async files => {
         const limiter = limit < 0 ? files.length : limit
         const requestMap = files.slice(0, limiter).map(async file => {
