@@ -156,12 +156,21 @@ async function getBody(as, filepath) {
         })
 }
 
-async function start(secret, globspec, namespec, published, as, limit = -1, endpoint = 'https://api.pndo.xyz') {
+async function start(secret, globspec, namespec, published, skip, as, limit = -1, endpoint = 'https://api.pndo.xyz') {
     return glob(globspec).then(async files => {
         const limiter = limit < 0 ? files.length : limit
         const requestMap = files.slice(0, limiter).map(async file => {
             const humanName = getHumanName(namespec, file)
-            const publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
+
+            let publishingKey = null
+
+            // If we're skipping key generation, publish with the secret key.
+            if (skip) {
+                publishingKey = await crypto.keys.unmarshalPrivateKey(Buffer.from(secret, 'base64'))
+            } else {
+                publishingKey = await getPublishingKey(Buffer.from(secret, 'base64'), humanName)
+            }
+
             const contentName = await getContentName(publishingKey)
 
             // TODO: Should be publishing key?
@@ -186,7 +195,7 @@ async function start(secret, globspec, namespec, published, as, limit = -1, endp
                         'path': file,
                         'as': as,
                     }),
-                    //'X-Public-Key': encodedPubKey, // TODO: publishing key?
+                    'X-Public-Key': encodedPubKey, // TODO: publishing key?
                     'X-Signature': encodedPubKey, // TODO: publishing key?
                 },
                 retry: 3,       // node-fetch-retry option -- number of attempts
@@ -206,6 +215,7 @@ async function start(secret, globspec, namespec, published, as, limit = -1, endp
                 .then(response => response.json())
                 .then(json => {
                     json.metadata.box.name = '/kbt/' + contentName
+                    json.metadata.box.key = encodedPubKey
                     return json
                 })
                 .catch(e => { console.log('failed at url: ', url, e) })
