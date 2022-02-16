@@ -65,8 +65,6 @@ Commit the `.github` directory and the action will run. View the logs and the
 
 ## API Reference
 
-The key config values are `secret`, `glob`, `as`, and `published` here:
-
 ```yaml
       - name: Publish data/ folder to web3
         id: data
@@ -99,6 +97,10 @@ into our graph.
 - `published` is a boolean that controls whether the content is published to
 IPFS. If `false` names and metadata are created. If `true` names and metadata
 are created and the content is pinned on IPFS.
+
+- `skip` is a boolean that tells us to skip key generation, treat `secret`
+as a base64-encoded key exported directly from go-ipfs, and use it for publishing.
+This is useful for migrating already-published names to Kubelt.
 
 ## `curl` Workflow
 
