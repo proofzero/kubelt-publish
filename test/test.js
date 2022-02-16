@@ -262,6 +262,7 @@ tap.test('Test the whole deal', async t => {
     const globspec_fixture = 'test/fixtures/*.json'
     const namespec_fixture = 'path'
     const published_fixture = true
+    const skip_fixture = false
     const as_fixture = 'dag'
     const limit = 10
 
@@ -273,12 +274,24 @@ tap.test('Test the whole deal', async t => {
         globspec_fixture,
         namespec_fixture,
         published_fixture,
+        skip_fixture,
         as_fixture,
         limit,
         test_endpoint)
 
-    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/kbt/k51qzi5uqu5dj9jygj5e8lc2l3n3vgv5dxpc28mo7kugg0rs6nwmfya46o8pgv"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/kbt/k51qzi5uqu5dh2b8tzgs66w5prp61evtgw4jnjnwm1iiazfz9w3ezuv3av10tb"}}}] 
+    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/kbt/k51qzi5uqu5dj9jygj5e8lc2l3n3vgv5dxpc28mo7kugg0rs6nwmfya46o8pgv","key":"CAESQKLPatJ7QPYjygqYv2YRUPoRKw+fRaINKXcmp8xPVb8de6u6be4mcs6OC5emBCaRRe960HXauD89OAOpsnXV4u8="}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/kbt/k51qzi5uqu5dh2b8tzgs66w5prp61evtgw4jnjnwm1iiazfz9w3ezuv3av10tb","key":"CAESQOB66d7n8WB3KjjfmYrN6Da6sAieEZ3DnORhLjkgk/h8I1r7XMIobF0nekvF1G7ONspbQAFrPP9szUszGvx2kV8="}}}]
     t.match(results, result_fixture)
+
+    const skipKeyResults = await lib.start(secret_fixture,
+        globspec_fixture,
+        namespec_fixture,
+        published_fixture,
+        !skip_fixture,
+        as_fixture,
+        limit,
+        test_endpoint)
+
+    t.match(skipKeyResults, [{"metadata":{"box":{"key": secret_fixture }}}])
 
     t.end()
 })

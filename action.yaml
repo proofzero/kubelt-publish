@@ -26,6 +26,9 @@ inputs:
   published:
     description: 'Whether the content is published. Default false.'
     required: false
+  skip:
+    description: 'Whether to skip key generation and simply use the passed secret.'
+    required: false
 outputs:
   roots:
     description: 'Content addresses created.'

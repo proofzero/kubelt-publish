@@ -6,10 +6,17 @@ const globspec  = core.getInput('glob',   { required: true  })
 const namespec  = core.getInput('name',   { required: false }) || 'path'
 
 const published = core.getBooleanInput('published', {required: false}) || false
+const skip      = core.getBooleanInput('skip',      {required: false}) || false
+
 const as = lib.getAs(core.getInput('as',  { required: false }))
 
 async function go () {
-    core.setOutput('roots', await lib.start(secret, globspec, namespec, published, as))
+    core.setOutput('roots', await lib.start(secret,
+        globspec,
+        namespec,
+        published,
+        skip,
+        as))
 }
 
 go()
