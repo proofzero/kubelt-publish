@@ -277,7 +277,7 @@ tap.test('Test the whole deal', async t => {
         limit,
         test_endpoint)
 
-    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te"}}}]
+    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/kbt/k51qzi5uqu5dj9jygj5e8lc2l3n3vgv5dxpc28mo7kugg0rs6nwmfya46o8pgv"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/kbt/k51qzi5uqu5dh2b8tzgs66w5prp61evtgw4jnjnwm1iiazfz9w3ezuv3av10tb"}}}] 
     t.match(results, result_fixture)
 
     t.end()
