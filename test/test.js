@@ -143,35 +143,21 @@ tap.test('Test the "isValidSpec" function', async t => {
     t.notOk(bad_is_undefdir)
 })
 
-tap.test('Test getDAGForm', async t => {
-    const FormData = require('multi-part')
+tap.test('Test getDAGCarfile', async t => {
     const dag_fixture = './test/fixtures/unrevealed.json'
     const bad_dag_fixture = './test/fixtures/unrevealed.car'
 
-    // Fixture to check that 'data' exists and has reasonable multipart headers.
-    const stream_fixture = {
-      'content-type': /multipart\/form-data; boundary=\"--/,
-      'content-length': /413/
-    }
-
-    // Make a form-data object, pack up a DAG, and add the stream to the form.
-    const form = new FormData()
-    await lib.getDAGForm(form, dag_fixture)
-
-    await form.buffer()
-    const headers = form.getHeaders(false)
-    t.match(headers['content-type'], stream_fixture['content-type'])
-    t.match(headers['content-length'], stream_fixture['content-length'])
+    let promise = lib.getDAGCarfile(dag_fixture).then(fd => fd.close())
+    t.resolves(promise)
 
     // Negative test: if we try to do something invalid, promise rejects.
-    const promise = lib.getDAGForm(bad_dag_fixture)
-    await t.rejects(promise)
+    promise = lib.getDAGCarfile(bad_dag_fixture)
+    t.rejects(promise)
 
     t.end()
 })
 
 tap.test('Test getFileForm', async t => {
-    const FormData = require('multi-part')
     const file_fixture = './test/fixtures/unrevealed.json'
     const bad_file_fixture = './test/fixtures/unrevealed.doesnt.exist.car'
 
@@ -181,13 +167,13 @@ tap.test('Test getFileForm', async t => {
     }
 
     // Make a form-data object, pack up a DAG, and add the stream to the form.
-    const form = new FormData()
-    await lib.getFileForm(form, file_fixture)
-
+    const { form, fd } = await lib.getFileForm(file_fixture)
     await form.buffer()
     const headers = form.getHeaders(false)
     t.match(headers['content-type'], stream_fixture['content-type'])
     t.match(headers['content-length'], stream_fixture['content-length'])
+
+    fd.close()
 
     // Negative test: if we try to do something invalid, promise rejects.
     const promise = lib.getFileForm(bad_file_fixture)
@@ -196,8 +182,7 @@ tap.test('Test getFileForm', async t => {
     t.end()
 })
 
-tap.test('Test getDirectoryForm', async t => {
-    const FormData = require('multi-part')
+tap.test('Test getDirectoryCarfile', async t => {
     const dir_fixture = './test/fixtures'
     const bad_dir_fixture = './test/doesnt_exist'
 
@@ -210,37 +195,23 @@ tap.test('Test getDirectoryForm', async t => {
       'dir-content-length': /2282/
     }
 
-    // Make a form-data object, pack up a DAG, and add the stream to the form.
-    const wrapform = new FormData()
-    await lib.getDirectoryForm(wrapform, dir_fixture, wrap)
+    let promise = lib.getDirectoryCarfile(dir_fixture, wrap).then(fd => fd.close())
+    t.resolves(promise)
 
-    await wrapform.buffer()
-    const wrapheaders = wrapform.getHeaders(false)
-    t.match(wrapheaders['content-type'], stream_fixture['content-type'])
-    t.match(wrapheaders['content-length'], stream_fixture['wrap-content-length'])
-
-    // Test the above, but flip the wrap flag.
-    let dirform = new FormData()
-    await lib.getDirectoryForm(dirform, dir_fixture, !wrap)
-
-    await dirform.buffer()
-    const dirheaders = dirform.getHeaders(false)
-    t.match(dirheaders['content-type'], stream_fixture['content-type'])
-    t.match(dirheaders['content-length'], stream_fixture['dir-content-length'])
+    promise = lib.getDirectoryCarfile(dir_fixture, !wrap).then(fd => fd.close())
+    t.resolves(promise)
 
     // Negative tests: if we try to do something invalid, promise rejects.
-    let promise = lib.getDirectoryForm(dirform, bad_dir_fixture, wrap)
+    promise = lib.getDirectoryCarfile(bad_dir_fixture, wrap)
     await t.rejects(promise)
 
-    promise = lib.getFileForm(dirform, bad_dir_fixture, !wrap)
+    promise = lib.getDirectoryCarfile(bad_dir_fixture, !wrap)
     await t.rejects(promise)
 
     t.end()
 })
 
-tap.test('Test getForm', async t => {
-    const FormData = require('multi-part')
-
+tap.test('Test getBody', async t => {
     // "as" param fixtures:
     const as_dag = 'dag'
     const as_file = 'file'
@@ -259,42 +230,28 @@ tap.test('Test getForm', async t => {
 
     const stream_header_fixture = /multipart\/form-data; boundary=\"--/
 
-    let form = new FormData()
-    await lib.getForm(form, as_dag, file_fixture)
+    let promise = lib.getBody(as_dag, file_fixture).then(fd => fd.close())
+    t.resolves(promise)
 
-    await form.buffer()
-    let headers = form.getHeaders(false)
-    t.match(headers['content-type'], stream_header_fixture)
-    t.match(headers['content-length'], /413/)
-
-    form = new FormData()
-    await lib.getForm(form, as_file, file_fixture)
+    const { form, fd } = await lib.getBody(as_file, file_fixture)
     await form.buffer()
     headers = form.getHeaders(false)
     t.match(headers['content-type'], stream_header_fixture)
     t.match(headers['content-length'], /324/)
 
-    form = new FormData()
-    await lib.getForm(form, as_dir, dir_fixture)
-    await form.buffer()
-    headers = form.getHeaders(false)
-    t.match(headers['content-type'], stream_header_fixture)
-    t.match(headers['content-length'], /2282/)
+    fd.close()
 
-    form = new FormData()
-    await lib.getForm(form, as_wrap, dir_fixture)
-    await form.buffer()
-    headers = form.getHeaders(false)
-    t.match(headers['content-type'], stream_header_fixture)
-    t.match(headers['content-length'], /2376/)
+    promise = lib.getBody(as_dir, dir_fixture).then(fd => fd.close())
+    t.resolves(promise)
+
+    promise = lib.getBody(as_wrap, dir_fixture).then(fd => fd.close())
+    t.resolves(promise)
 
     // Negative tests: test bad "as" then bad path.
-    form = new FormData()
-    let promise = lib.getForm(form, as_null, bad_dir_fixture)
+    promise = lib.getBody(as_null, bad_dir_fixture)
     await t.rejects(promise)
 
-    form = new FormData()
-    promise = lib.getForm(form, as_dag, bad_dir_fixture)
+    promise = lib.getBody(as_dag, bad_dir_fixture)
     await t.rejects(promise)
 
     t.end()
@@ -320,7 +277,7 @@ tap.test('Test the whole deal', async t => {
         limit,
         test_endpoint)
 
-    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"baguqeerawl2qpmtwwazm4n6rk75mp6bmtzjvtjvibfnp56ahqvrd2l77kfwq"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"baguqeeramdvrl6vhj4trf2attm2oesrib3nxiwcfw4dkkr65u3oxwyrdmg7q"}}}]
+    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu"}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te"}}}]
     t.match(results, result_fixture)
 
     t.end()
