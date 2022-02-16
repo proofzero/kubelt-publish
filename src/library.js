@@ -204,6 +204,10 @@ async function start(secret, globspec, namespec, published, as, limit = -1, endp
             const url = new URL(contentName, new URL('/v0/api/content/kbt/', endpoint))
             return fetch(url, options)
                 .then(response => response.json())
+                .then(json => {
+                    json.metadata.box.name = '/kbt/' + contentName
+                    return json
+                })
                 .catch(e => { console.log('failed at url: ', url, e) })
                 .finally(() => {
                     if ('file' != as) {
