@@ -29,6 +29,14 @@ inputs:
   skip:
     description: 'Whether to skip key generation and simply use the passed secret.'
     required: false
+  core:
+    description: "The core (namespace) that you want to publish your names under. \"
+    Default is 'kbt'."
+    required: false
+  domain:
+    description: "The custom domain to which we're publishing (requires \"
+    registration). Includes scheme (default: 'https://api.pndo.xyz')."
+    required: false
 outputs:
   roots:
     description: 'Content addresses created.'

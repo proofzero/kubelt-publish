@@ -2,6 +2,7 @@
 const packDAG = require('./pack.js')
 const { packToFs } = require('ipfs-car/pack/fs')
 const { FsBlockStore } = require('ipfs-car/blockstore/fs')
+//const { CarReader } = require('@ipld/car');
 
 // TODO: In-mem only?
 //const { packToBlob } = require('ipfs-car/pack/blob')
@@ -103,9 +104,9 @@ async function getDAGCarfile(filepath) {
             return fs.readFile(filepath)
                 .then(async text => {
                     const codec = 'dag-cbor'
-                    await packDAG.writeCarFile(tempfile.path, codec, JSON.parse(text))
+                    return await packDAG.writeCarFile(tempfile.path, codec, JSON.parse(text))
                 })
-                .then(async () => fs.open(tempfile.path))
+                .then(async (carfile) => Promise.all([fs.open(tempfile.path), carfile]))
         })
 }
 
@@ -156,7 +157,7 @@ async function getBody(as, filepath) {
         })
 }
 
-async function start(secret, globspec, namespec, published, skip, as, limit = -1, endpoint = 'https://api.pndo.xyz') {
+async function start(secret, globspec, namespec, core, domain, published, skip, as, limit = -1, endpoint = 'https://api.pndo.xyz') {
     return glob(globspec).then(async files => {
         const limiter = limit < 0 ? files.length : limit
         const requestMap = files.slice(0, limiter).map(async file => {
@@ -177,7 +178,7 @@ async function start(secret, globspec, namespec, published, skip, as, limit = -1
             const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
             const encodedPubKey = protocolPubKey.toString('base64')
 
-            const body = await getBody(as, file)
+            const [ body, carfile ] = await getBody(as, file)
             let headers = null
 
             // File types are sent through form data so need the multiparts.
@@ -198,9 +199,9 @@ async function start(secret, globspec, namespec, published, skip, as, limit = -1
                     'X-Public-Key': encodedPubKey, // TODO: publishing key?
                     'X-Signature': encodedPubKey, // TODO: publishing key?
                 },
-                retry: 3,       // node-fetch-retry option -- number of attempts
-                pause: 500,     // node-fetch-retry option -- millisecond delay
-                silent: false,  // node-fetch-retry option -- console output?
+                retry: 3,      // node-fetch-retry option -- number of attempts
+                pause: 500,    // node-fetch-retry option -- millisecond delay
+                silent: true,  // node-fetch-retry option -- eat console output?
             }
 
             // File types are sent through form data so need the encoded body.
@@ -210,11 +211,46 @@ async function start(secret, globspec, namespec, published, skip, as, limit = -1
                 options.body = body.createReadStream()
             }
 
-            const url = new URL(contentName, new URL('/v0/api/content/kbt/', endpoint))
-            return fetch(url, options)
+            // If we're overriding the domain, use the override (for testing).
+            const urlbase = endpoint || domain
+
+            ////////////////////////////////////////////////////////////////////
+            // TODO: Needs refactor. Uses v1 endpoint for speed.
+            ////////////////////////////////////////////////////////////////////
+            let v1_promise = null
+            let fd = null
+            if ('dag' == as) {
+                const cid = carfile.roots[0].toString()
+                const url_v1 = new URL(humanName, new URL('/v0/api/content/' + core + '/', urlbase))
+
+                v1_promise = fs.open(file)
+                    .then(fd_ => {
+                        fd = fd_
+                        const opts = JSON.parse(JSON.stringify(options))
+                        opts.headers['content-type'] = 'application/json'
+                        opts.headers['accept'] = 'application/json'
+                        opts.headers['x-cid'] = cid
+                        opts.body = fd.createReadStream()
+                        return opts
+                    })
+                    .then(opts => fetch(url_v1, opts))
+                    .then(r => r.json()).then(j => {
+                        fd.close()
+                        j.metadata.box.name = '/' + core + '/' + humanName
+                        j.metadata.box.cid = cid.toString()
+                        j.metadata.box.key = encodedPubKey
+                        return j
+                    })
+            }/**/
+            ////////////////////////////////////////////////////////////////////
+
+            const url = new URL(contentName, new URL('/last/api/content/kbt/', urlbase))
+            let v0_promise = null
+
+            v0_promise = fetch(url, options)
                 .then(response => response.json())
                 .then(json => {
-                    json.metadata.box.name = '/kbt/' + contentName
+                    json.metadata.box.name = '/' + core + '/' + humanName
                     json.metadata.box.key = encodedPubKey
                     return json
                 })
@@ -225,7 +261,14 @@ async function start(secret, globspec, namespec, published, skip, as, limit = -1
                     } else {
                         body.fd.close()
                     }
-                })
+                })/**/
+
+            if (v0_promise && v1_promise) {
+                // Fire Estuary and Wasabi, but resolve when one comes back.
+                return Promise.any([v0_promise, v1_promise])
+            } else {
+                return v0_promise || v1_promise
+            }
         })
 
         return Promise.all(requestMap)
