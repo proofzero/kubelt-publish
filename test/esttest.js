@@ -7,13 +7,11 @@ tap.test('Direct estuary call', async t => {
     const dag_fixture = './test/fixtures/unrevealed.json'
 
     // Make a form-data object, pack up a DAG, and add the stream to the form.
-    const form = new FormData()
-    const fd = await lib.getDAGForm(form, dag_fixture)
+    const [fd, file] = await lib.getDAGCarfile(dag_fixture)
 
     const options = {
         method: 'POST',
         headers: {
-            ...form.getHeaders(),
             "Authorization": "Bearer EST4f2b5b94-e8f0-410b-bc0a-29a0ca2a6db7ARY ",
             "Accept": "application/json",
         },

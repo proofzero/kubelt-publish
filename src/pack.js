@@ -68,6 +68,7 @@ writeCarFile('output.car', 'dag-cbor', {
 const writeCarFile = async (fileName, codecName, dataObj) => {
     const fileStream = fs.createWriteStream(fileName);
     const car = await writeCar(fileStream, codecName, dataObj);
+    return car
 };
 
 module.exports = {

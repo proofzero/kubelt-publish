@@ -3,6 +3,8 @@
 Kubelt is the easiest way to publish content on web3. This action uses our SDK
 to publish your content to IPFS using our backend. [Join us on Matrix](https://matrix.to/#/#lobby:matrix.kubelt.com) for questions and suggestions.
 
+To register, contact [founders@kubelt.com](mailto:founders@kubelt.com).
+
 ## Quickstart
 
 Follow these steps to create a workflow that pushes your content to IPFS. See 
@@ -84,6 +86,10 @@ tighten. To store `secret` securely (as it is above) use [Encrypted secrets](htt
 - `glob` is a [minimatch](https://github.com/isaacs/minimatch) pattern. All
 files and directories that match the pattern are named and published.
 
+- `name` allows you to specify a unique identifier for your content. Currently
+only `'path'` is supported, and indicates filepath is a unique identifier (specifically,
+[basename](https://nodejs.org/api/path.html#pathbasenamepath-ext)).
+
 - `as` is an enum field, one of `"dag"`, `"file"`, `"dir"`, or `"wrap"`, that lets you
 specify what kind of content you're uploading. Default is `"dag"` which stores file
 contents as DAGs, use `"file"` if you want to store files themselves (as opposed
@@ -102,156 +108,13 @@ are created and the content is pinned on IPFS.
 as a base64-encoded key exported directly from go-ipfs, and use it for publishing.
 This is useful for migrating already-published names to Kubelt.
 
+- `core` is the name of your custom core (default is ours: `kbt`). For now, think
+of cores as namespaces. Within a core, specified `name`s are considered unique.
+Contact us to create your core.
+
+- `domain` is the name (CNAME) of your custom domain. Contact us to create this.
+
 ## `curl` Workflow
 
-These examples use included test fixture data to illustrate the capabilities of
-the publishing API by accessing it directly.
+Coming soon -- the API has changed. See history for a legacy workflow using `curl`.
 
-First let's submit a carfile with `published: false` (so it won't be pinned):
-
-```bash
-$ curl -X POST "https://api.pndo.xyz/v0/api/content/kbt/abc123" \
- -F data=@test/fixtures/unrevealed.car \
- -H 'X-Signature: my_secret_key'       \
- -H 'X-Metadata: {"published": false}'
-```
-
-The response will come back `{"expirationTtl":86400,"metadata":{"published":false,"box":{"cid":"unpublished"}}}`
-which we pretty print (with `jq`):
-
-```json
-{
-  "expirationTtl": 86400,
-  "metadata": {
-    "published": false,
-    "box": {
-      "cid": "unpublished"
-    }
-  }
-}
-```
-
-Now we `curl` the name to see what we get back:
-
-```bash
-$ curl "https://api.pndo.xyz/v0/api/content/kbt/abc123"
-```
-
-Which returns:
-
-```bash
-unpublished
-```
-
-This is because we set the `published` flag to `false`. Now let's flip the flag:
-
-```bash
-$ curl -X POST "https://api.pndo.xyz/v0/api/content/kbt/abc123" \
- -F data=@test/fixtures/unrevealed.car \
- -H 'X-Signature: my_secret_key'       \
- -H 'X-Metadata: {"published": true}'
-```
-
-Which we pretty print (with `jq`):
-
-```json
-{
-  "expirationTtl": 86400,
-  "metadata": {
-    "published": true,
-    "box": {
-      "cid": "bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te"
-    }
-  }
-}
-```
-
-Now when we `curl` the name:
-
-```bash
-$ curl "https://api.pndo.xyz/v0/api/content/kbt/abc123"
-```
-
-We see:
-
-```
-bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te
-```
-
-And we can chain calls to get the data directly out of IPFS:
-
-```bash
-$ curl "https://api.pndo.xyz/v0/api/content/kbt/abc123" | ipfs dag get | jq
-```
-
-Which pretty prints:
-
-```json
-{
-  "description": "This is data that is published on IPFS as a placeholder for data to be revealed later.",
-  "name": "Unrevealed Content"
-}
-```
-
-Now we can publish new content addressed by the same name (`abc123` in this case):
-
-```bash
-$ curl -X POST "https://api.pndo.xyz/v0/api/content/kbt/abc123" \
- -F data=@test/fixtures/revealed.car \
- -H 'X-Signature: my_secret_key'       \
- -H 'X-Metadata: {"published": true}'
-```
-
-Note that the cid in the response has changed. With the same call as above:
-
-```bash
-$ curl "https://api.pndo.xyz/v0/api/content/kbt/abc123" | ipfs dag get | jq
-```
-
-Which pretty prints:
-
-```json
-{
-  "bayc": {
-    "id": 5383,
-    "name": "Bored Ape YC #5383",
-    "trait_count": 6,
-    "traits": [
-      {
-        "trait": "background",
-        "value": "PSA 10"
-      },
-      {
-        "trait": "fur",
-        "value": "Solid Gold"
-      },
-      {
-        "trait": "hat",
-        "value": "Army Hat"
-      },
-      {
-        "trait": "clothes",
-        "value": "Lumberjack Shirt"
-      },
-      {
-        "trait": "eyes",
-        "value": "Angry"
-      },
-      {
-        "trait": "mouth",
-        "value": "Bored Unshaven"
-      },
-      {
-        "trait": "earring",
-        "value": "none"
-      }
-    ]
-  },
-  "description": "This is data that is published on IPFS. This is the revealed content.",
-  "name": "Revealed Content"
-}
-```
-
-The `abc123` stable name has now been re-linked to newly published data.
-
-Enjoy your Bored Ape!
