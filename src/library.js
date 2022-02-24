@@ -210,7 +210,8 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
             if ('file' == as) {
                 options.body = body.form.stream()
             } else {
-                options.body = body.createReadStream()
+                options.body = await body.readFile()//body.createReadStream()
+                body.close()
             }
 
             // If we're overriding the domain, use the override (for testing).
@@ -220,38 +221,37 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
             // TODO: Needs refactor. Uses v1 endpoint for speed.
             ////////////////////////////////////////////////////////////////////
             let v1_promise = null
-            let fd = null
             if ('dag' == as) {
                 const cid = carfile.roots[0].toString()
                 const url_v1 = new URL(humanName, new URL('/v0/api/content/' + core + '/', urlbase))
-
+                //console.log(url_v1.toString())
                 v1_promise = fs.open(file)
-                    .then(fd_ => {
-                        fd = fd_
-                        const opts = JSON.parse(JSON.stringify(options))
+                    .then(async fd => {
+                        const opts = options //JSON.parse(JSON.stringify(options))
                         opts.headers['content-type'] = 'application/json'
                         opts.headers['accept'] = 'application/json'
                         opts.headers['x-cid'] = cid
-                        opts.body = fd.createReadStream()
-                        return opts
-                    })
-                    .then(opts => fetch(url_v1, opts))
-                    .then(r => r.json()).then(j => {
+                        opts.body = await fd.readFile()//createReadStream()
                         fd.close()
-                        j.metadata.box.name = '/' + core + '/' + humanName
-                        j.metadata.box.cid = cid.toString()
-                        j.metadata.box.key = encodedPubKey
-                        return j
+
+                        return fetch(url_v1, opts)
+                            .then(r => r.json()).then(j => {
+                                //fd.close()
+                                j.metadata.box.name = '/' + core + '/' + humanName
+                                j.metadata.box.cid = cid.toString()
+                                j.metadata.box.key = encodedPubKey
+                                return j
+                            })
                     })
-            }/**/
+            }
             ////////////////////////////////////////////////////////////////////
 
             // Make recalls to the previous API version fire-and-forget:
 
-            const url = new URL(contentName, new URL('/last/api/content/kbt/', urlbase))
+            /*const url = new URL(contentName, new URL('/last/api/content/kbt/', urlbase))
             let v0_request = null
 
-            options.port = url.port
+            /*options.port = url.port
             options.hostname = url.hostname
             options.protocol = url.protocol
             options.path = url.pathname
