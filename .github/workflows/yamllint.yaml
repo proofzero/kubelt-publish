@@ -12,8 +12,6 @@ jobs:
         uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: .
-          ignore: |
-            node_modules
           config_data: |
             extends: default
             rules:
