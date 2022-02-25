@@ -4,7 +4,7 @@
   "description": "The easiest way to publish web3 content.",
   "main": "index.js",
   "scripts": {
-    "test": "act"
+    "test": "node ./test/all.js"
   },
   "repository": {
     "type": "git",
