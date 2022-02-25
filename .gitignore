@@ -3,3 +3,4 @@
 !.gitignore
 !.gitattributes
 output.car
+node_modules
