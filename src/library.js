@@ -17,6 +17,8 @@ const { CID } = require('multiformats/cid')
 const { base36 } = require('multiformats/bases/base36')
 
 // For HTTP comms:
+const http = require('http')
+const https = require('https')
 const fetch = require('node-fetch-retry')
 const FormData = require('multi-part')
 
@@ -208,7 +210,8 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
             if ('file' == as) {
                 options.body = body.form.stream()
             } else {
-                options.body = body.createReadStream()
+                options.body = await body.readFile()//body.createReadStream()
+                body.close()
             }
 
             // If we're overriding the domain, use the override (for testing).
@@ -218,36 +221,54 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
             // TODO: Needs refactor. Uses v1 endpoint for speed.
             ////////////////////////////////////////////////////////////////////
             let v1_promise = null
-            let fd = null
             if ('dag' == as) {
                 const cid = carfile.roots[0].toString()
                 const url_v1 = new URL(humanName, new URL('/v0/api/content/' + core + '/', urlbase))
-
+                //console.log(url_v1.toString())
                 v1_promise = fs.open(file)
-                    .then(fd_ => {
-                        fd = fd_
-                        const opts = JSON.parse(JSON.stringify(options))
+                    .then(async fd => {
+                        const opts = options //JSON.parse(JSON.stringify(options))
                         opts.headers['content-type'] = 'application/json'
                         opts.headers['accept'] = 'application/json'
                         opts.headers['x-cid'] = cid
-                        opts.body = fd.createReadStream()
-                        return opts
-                    })
-                    .then(opts => fetch(url_v1, opts))
-                    .then(r => r.json()).then(j => {
+                        opts.body = await fd.readFile()//createReadStream()
                         fd.close()
-                        j.metadata.box.name = '/' + core + '/' + humanName
-                        j.metadata.box.cid = cid.toString()
-                        j.metadata.box.key = encodedPubKey
-                        return j
+
+                        return fetch(url_v1, opts)
+                            .then(r => r.json()).then(j => {
+                                //fd.close()
+                                j.metadata.box.name = '/' + core + '/' + humanName
+                                j.metadata.box.cid = cid.toString()
+                                j.metadata.box.key = encodedPubKey
+                                return j
+                            })
                     })
-            }/**/
+            }
             ////////////////////////////////////////////////////////////////////
 
-            const url = new URL(contentName, new URL('/last/api/content/kbt/', urlbase))
-            let v0_promise = null
+            // Make recalls to the previous API version fire-and-forget:
 
-            v0_promise = fetch(url, options)
+            /*const url = new URL(contentName, new URL('/last/api/content/kbt/', urlbase))
+            let v0_request = null
+
+            /*options.port = url.port
+            options.hostname = url.hostname
+            options.protocol = url.protocol
+            options.path = url.pathname
+
+            v0_request = 'https:' == options.protocol.toLowerCase() ? https.request(options) : http.request(options)
+
+            if ('file' != as) {
+                v0_request.write(await body.readFile())
+                body.close()
+            } else {
+                v0_request.write(await body.fd.readFile())
+                body.fd.close()
+            }
+
+            v0_request.end()
+
+            /*fetch(url, options)
                 .then(response => response.json())
                 .then(json => {
                     json.metadata.box.name = '/' + core + '/' + humanName
@@ -256,19 +277,15 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
                 })
                 .catch(e => { console.log('failed at url: ', url, e) })
                 .finally(() => {
-                    if ('file' != as) {
-                        body.close()
-                    } else {
-                        body.fd.close()
-                    }
-                })/**/
+               })
 
-            if (v0_promise && v1_promise) {
+            if (v0_request && v1_promise) {
                 // Fire Estuary and Wasabi, but resolve when one comes back.
-                return Promise.any([v0_promise, v1_promise])
+                return Promise.any([v0_request, v1_promise])
             } else {
-                return v0_promise || v1_promise
-            }
+                return v0_request || v1_promise
+            }/**/
+            return v1_promise
         })
 
         return Promise.all(requestMap)

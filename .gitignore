@@ -1,5 +1,5 @@
 # Standard ignores
-.*
 !.gitignore
 !.gitattributes
 output.car
+node_modules
