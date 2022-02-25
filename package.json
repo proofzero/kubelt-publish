@@ -4,7 +4,8 @@
   "description": "The easiest way to publish web3 content.",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/all.js"
+    "test": "node ./test/all.js",
+    "build": "ncc build -o dist"
   },
   "repository": {
     "type": "git",
@@ -52,6 +53,7 @@
     "yargs": "^17.3.1"
   },
   "devDependencies": {
+    "@vercel/ncc": "^0.33.3",
     "tap": "^15.1.6"
   }
 }
