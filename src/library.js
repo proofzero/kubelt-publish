@@ -215,7 +215,7 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
             }
 
             // If we're overriding the domain, use the override (for testing).
-            const urlbase = endpoint || domain
+            const urlbase = domain || endpoint
 
             ////////////////////////////////////////////////////////////////////
             // TODO: Needs refactor. Uses v1 endpoint for speed.

@@ -1,4 +1,4 @@
-# Standard ignores
+.*
 !.gitignore
 !.gitattributes
 output.car

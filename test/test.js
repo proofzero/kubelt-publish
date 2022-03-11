@@ -262,7 +262,9 @@ tap.test('Test the whole deal', async t => {
     const globspec_fixture = 'test/fixtures/*.json'
     const namespec_fixture = 'path'
     const core_fixture = 'test'
-    const domain_fixture = 'https://api.pndo.xyz'
+    const domain_fixture = 'https://staging.pndo.xyz'
+    //const domain_fixture = 'https://api.pndo.xyz'
+    //const domain_fixture = 'https://pndo-worker-staging.admin1337.workers.dev'
     const published_fixture = true
     const skip_fixture = false
     const as_fixture = 'dag'
@@ -270,6 +272,8 @@ tap.test('Test the whole deal', async t => {
 
     // Assumes `wrangler dev` is serving the pando worker locally.
     const test_endpoint = 'http://127.0.0.1:8787'
+    //const test_endpoint = 'http://127.0.0.1:8787'
+    //const test_endpoint = 'http://127.0.0.1:8787'
 
     // TODO: This should take a mock because it fires requests.
     const results = await lib.start(secret_fixture,
@@ -283,7 +287,7 @@ tap.test('Test the whole deal', async t => {
         limit,
         test_endpoint)
 
-    const result_fixture = [{"expirationTtl":86400,"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/test/revealed.json","key":"CAESQKLPatJ7QPYjygqYv2YRUPoRKw+fRaINKXcmp8xPVb8de6u6be4mcs6OC5emBCaRRe960HXauD89OAOpsnXV4u8="}}},{"expirationTtl":86400,"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/test/unrevealed.json","key":"CAESQOB66d7n8WB3KjjfmYrN6Da6sAieEZ3DnORhLjkgk/h8I1r7XMIobF0nekvF1G7ONspbQAFrPP9szUszGvx2kV8="}}}]
+    const result_fixture = [{"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/test/revealed.json","key":"CAESQKLPatJ7QPYjygqYv2YRUPoRKw+fRaINKXcmp8xPVb8de6u6be4mcs6OC5emBCaRRe960HXauD89OAOpsnXV4u8="}}},{"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/test/unrevealed.json","key":"CAESQOB66d7n8WB3KjjfmYrN6Da6sAieEZ3DnORhLjkgk/h8I1r7XMIobF0nekvF1G7ONspbQAFrPP9szUszGvx2kV8="}}}]
     t.match(results, result_fixture)
 
     const skipKeyResults = await lib.start(secret_fixture,
