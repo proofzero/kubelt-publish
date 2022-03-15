@@ -17,8 +17,6 @@ const { CID } = require('multiformats/cid')
 const { base36 } = require('multiformats/bases/base36')
 
 // For HTTP comms:
-const http = require('http')
-const https = require('https')
 const fetch = require('node-fetch-retry')
 const FormData = require('multi-part')
 
@@ -198,8 +196,7 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
                         'path': file,
                         'as': as,
                     }),
-                    'X-Public-Key': encodedPubKey, // TODO: publishing key?
-                    'X-Signature': encodedPubKey, // TODO: publishing key?
+                    'X-Public-Key': encodedPubKey,
                 },
                 retry: 3,      // node-fetch-retry option -- number of attempts
                 pause: 500,    // node-fetch-retry option -- millisecond delay
@@ -217,15 +214,12 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
             // If we're overriding the domain, use the override (for testing).
             const urlbase = endpoint || domain
 
-            ////////////////////////////////////////////////////////////////////
-            // TODO: Needs refactor. Uses v1 endpoint for speed.
-            ////////////////////////////////////////////////////////////////////
-            let v1_promise = null
+            let v0_promise = null
             if ('dag' == as) {
                 const cid = carfile.roots[0].toString()
-                const url_v1 = new URL(humanName, new URL('/v0/api/content/' + core + '/', urlbase))
-                //console.log(url_v1.toString())
-                v1_promise = fs.open(file)
+                const url_v0 = new URL(humanName, new URL('/v0/api/content/' + core + '/', urlbase))
+                //console.log(url_v0.toString())
+                v0_promise = fs.open(file)
                     .then(async fd => {
                         const opts = options //JSON.parse(JSON.stringify(options))
                         opts.headers['content-type'] = 'application/json'
@@ -234,7 +228,14 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
                         opts.body = await fd.readFile()//createReadStream()
                         fd.close()
 
-                        return fetch(url_v1, opts)
+                        //console.log('body', opts.body.length)
+                        const raw_sig = Buffer.from(await publishingKey.sign(opts.body))
+                        //console.log(raw_sig)
+                        const b64_sig = raw_sig.toString('base64')
+                        //console.log(b64_sig)
+                        opts.headers['x-signature'] = b64_sig
+
+                        return fetch(url_v0, opts)
                             .then(r => r.json()).then(j => {
                                 //fd.close()
                                 j.metadata.box.name = '/' + core + '/' + humanName
@@ -244,48 +245,8 @@ async function start(secret, globspec, namespec, core, domain, published, skip, 
                             })
                     })
             }
-            ////////////////////////////////////////////////////////////////////
 
-            // Make recalls to the previous API version fire-and-forget:
-
-            /*const url = new URL(contentName, new URL('/last/api/content/kbt/', urlbase))
-            let v0_request = null
-
-            /*options.port = url.port
-            options.hostname = url.hostname
-            options.protocol = url.protocol
-            options.path = url.pathname
-
-            v0_request = 'https:' == options.protocol.toLowerCase() ? https.request(options) : http.request(options)
-
-            if ('file' != as) {
-                v0_request.write(await body.readFile())
-                body.close()
-            } else {
-                v0_request.write(await body.fd.readFile())
-                body.fd.close()
-            }
-
-            v0_request.end()
-
-            /*fetch(url, options)
-                .then(response => response.json())
-                .then(json => {
-                    json.metadata.box.name = '/' + core + '/' + humanName
-                    json.metadata.box.key = encodedPubKey
-                    return json
-                })
-                .catch(e => { console.log('failed at url: ', url, e) })
-                .finally(() => {
-               })
-
-            if (v0_request && v1_promise) {
-                // Fire Estuary and Wasabi, but resolve when one comes back.
-                return Promise.any([v0_request, v1_promise])
-            } else {
-                return v0_request || v1_promise
-            }/**/
-            return v1_promise
+            return v0_promise
         })
 
         return Promise.all(requestMap)

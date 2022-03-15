@@ -4,7 +4,7 @@
   "description": "The easiest way to publish web3 content.",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/all.js",
+    "test": "node ./test/test.js",
     "build": "ncc build -o dist"
   },
   "repository": {
