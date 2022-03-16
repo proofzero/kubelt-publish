@@ -104,10 +104,6 @@ into our graph.
 IPFS. If `false` names and metadata are created. If `true` names and metadata
 are created and the content is pinned on IPFS.
 
-- `skip` is a boolean that tells us to skip key generation, treat `secret`
-as a base64-encoded key exported directly from go-ipfs, and use it for publishing.
-This is useful for migrating already-published names to Kubelt.
-
 - `core` is the name of your custom core (default is ours: `kbt`). For now, think
 of cores as namespaces. Within a core, specified `name`s are considered unique.
 Contact us to create your core.

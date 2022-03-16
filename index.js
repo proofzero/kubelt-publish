@@ -8,7 +8,6 @@ const corename  = core.getInput('core',   { required: false }) || 'kbt'
 const domain    = core.getInput('domain', { required: false }) || 'https://api.pndo.xyz'
 
 const published = core.getBooleanInput('published', {required: false}) || false
-const skip      = core.getBooleanInput('skip',      {required: false}) || false
 
 const as = lib.getAs(core.getInput('as',  { required: false }))
 
@@ -19,7 +18,7 @@ async function go () {
         corename,
         domain,
         published,
-        skip,
+        true, // deprecate skip
         as))
 }
 

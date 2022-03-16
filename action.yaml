@@ -26,12 +26,9 @@ inputs:
   published:
     description: 'Whether the content is published. Default false.'
     required: false
-  skip:
-    description: 'Whether to skip key generation and simply use the passed secret.'
-    required: false
   core:
-    description: "The core (namespace) that you want to publish your names under. \"
-    Default is 'kbt'."
+    description: "The core (namespace) that you want to publish your names \"
+    under. Default is 'kbt'."
     required: false
   domain:
     description: "The custom domain to which we're publishing (requires \"
