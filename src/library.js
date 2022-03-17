@@ -157,7 +157,7 @@ async function getBody(as, filepath) {
         })
 }
 
-async function start(secret, globspec, namespec, core, domain, published, skip, as, limit = -1, endpoint = 'https://api.pndo.xyz') {
+async function start(secret, globspec, namespec, core, domain = 'https://api.pndo.xyz', published, skip, as, limit = -1, endpoint) {
     return glob(globspec).then(async files => {
         const limiter = limit < 0 ? files.length : limit
         const requestMap = files.slice(0, limiter).map(async file => {

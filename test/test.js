@@ -258,21 +258,25 @@ tap.test('Test getBody', async t => {
 })
 
 /*tap.test('Test the whole deal', async t => {
-    const secret_fixture = process.env['SECRET']
+    const secret_fixture = process.env['MY_SECRET_PUBLISHING_KEY']
     const globspec_fixture = 'test/fixtures/*.json'
+    //const globspec_fixture = 'test/metadata-sample/metadata/unrevealed/*'//0x505141a16f47f9df0655564c65b8452ffc21f79b3d9d9799446e8de93bccb751' //test/fixtures/*.json'
+    //const globspec_fixture = 'test/metadata-sample/metadata/revealed/0x002df423ac0842d53131042dd8ffa394425390862f9718bdf51aa0fe12721036'
     const namespec_fixture = 'path'
     const core_fixture = 'test'
-    const domain_fixture = 'https://api.pndo.xyz'
+    const domain_fixture = 'https://pndo-worker-staging.admin1337.workers.dev'
     const published_fixture = true
     const skip_fixture = true
     //const skip_fixture = false
     const as_fixture = 'dag'
-    const limit = 10
+    const limit = 100
 
     // Assumes `wrangler dev` is serving the pando worker locally.
     //const test_endpoint = 'http://127.0.0.1:8787'
-    const test_endpoint = 'https://staging.pndo.xyz'
+    //const test_endpoint = 'https://staging.pndo.xyz'
+    //const test_endpoint = 'https://pndo-worker-staging.admin1337.workers.dev'
     //const test_endpoint = 'https://api.pndo.xyz'
+    const test_endpoint = null
 
     // TODO: This should take a mock because it fires requests.
     const results = await lib.start(secret_fixture,
@@ -286,6 +290,7 @@ tap.test('Test getBody', async t => {
         limit,
         test_endpoint)
 
+    //console.log(JSON.stringify(results))
     const result_fixture = [{"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/test/revealed.json","key":"CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ="}}},{"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/test/unrevealed.json","key":"CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ="}}}]
     t.match(results, result_fixture)
 
