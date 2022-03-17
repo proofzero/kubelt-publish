@@ -43670,7 +43670,7 @@ async function start(secret, globspec, namespec, core, domain = 'https://api.pnd
             const contentName = await getContentName(publishingKey)
 
             // TODO: Should be publishing key?
-            const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey)
+            const protocolPubKey = crypto.keys.marshalPublicKey(publishingKey.public)
             const encodedPubKey = protocolPubKey.toString('base64')
 
             const [ body, carfile ] = await getBody(as, file)

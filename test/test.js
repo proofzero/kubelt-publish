@@ -264,7 +264,7 @@ tap.test('Test getBody', async t => {
     //const globspec_fixture = 'test/metadata-sample/metadata/revealed/0x002df423ac0842d53131042dd8ffa394425390862f9718bdf51aa0fe12721036'
     const namespec_fixture = 'path'
     const core_fixture = 'test'
-    const domain_fixture = 'https://pndo-worker-staging.admin1337.workers.dev'
+    const domain_fixture = process.env['MY_PUBLISHING_DOMAIN']
     const published_fixture = true
     const skip_fixture = true
     //const skip_fixture = false
@@ -291,7 +291,7 @@ tap.test('Test getBody', async t => {
         test_endpoint)
 
     //console.log(JSON.stringify(results))
-    const result_fixture = [{"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/test/revealed.json","key":"CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ="}}},{"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/test/unrevealed.json","key":"CAESQC7y6BZeKlnsYe/brQYgofcYF9CPB4EWtR12wEG9Wtu8m4Pce9l+YAzsMtqzm3dUj8gw/bJbDDTEAr0H9m2N7xQ="}}}]
+    const result_fixture = [{"metadata":{"published":true,"human":"revealed.json","path":"test/fixtures/revealed.json","as":"dag","box":{"cid":"bafyreicdv7bpbli5xqkm453qljawxrl4caikjojzhlcp4c5crthvwbvgbu","name":"/test/revealed.json","key":"CAESIJuD3HvZfmAM7DLas5t3VI/IMP2yWww0xAK9B/Ztje8U"}}},{"metadata":{"published":true,"human":"unrevealed.json","path":"test/fixtures/unrevealed.json","as":"dag","box":{"cid":"bafyreiakhygqrybainjazlvdntdso3jusx5zx3hhuqkdddmymbffj7f7te","name":"/test/unrevealed.json","key":"CAESIJuD3HvZfmAM7DLas5t3VI/IMP2yWww0xAK9B/Ztje8U"}}}]
     t.match(results, result_fixture)
 
     t.end()
