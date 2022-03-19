@@ -233,15 +233,31 @@ async function start(secret, globspec, namespec, core, domain = 'https://api.pnd
                         //console.log(raw_sig)
                         const b64_sig = raw_sig.toString('base64')
                         //console.log(b64_sig)
-                        opts.headers['x-signature'] = b64_sig
+			    opts.headers['x-signature'] = b64_sig
 
-                        return fetch(url_v0, opts)
-                            .then(r => r.json()).then(j => {
-                                //fd.close()
-                                j.metadata.box.name = '/' + core + '/' + humanName
-                                j.metadata.box.cid = cid.toString()
-                                j.metadata.box.key = encodedPubKey
-                                return j
+			    return fetch(url_v0, opts)
+				    .then(r => {
+					    try {
+						    JSON.parse(r)
+					    } catch (e) {
+						    console.log("497 error from gateway")
+						    console.log(r)
+						    return {"error": r}.json()
+					    }
+					    return r.json()
+
+				    }).then(j => {
+					    if('metadata' in j) {
+						    //fd.close()
+						    j.metadata.box.name = '/' + core + '/' + humanName
+						    j.metadata.box.cid = cid.toString()
+						    j.metadata.box.key = encodedPubKey
+					    } else {
+						    console.log("498 missing metadata")
+						    return {'error': "missing metadata"}
+
+					    }
+					    return j
                             })
                     })
             }
